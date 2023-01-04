@@ -8,21 +8,13 @@ namespace H4_Poker_Engine
 {
     public abstract class BaseRuleSet
     {
+        #region Fields
         private int minimumPlayers;
-
-        public int MinimumPlayers
-        {
-            get { return minimumPlayers; }
-            private set { minimumPlayers = value; }
-        }
-
         private int maximumPlayers;
+        #endregion
 
-        public int MaximumPlayers
-        {
-            get { return maximumPlayers; }
-            protected set { maximumPlayers = value; }
-        }
+
+        
 
 
         public abstract void RunPokerGame();
@@ -31,12 +23,24 @@ namespace H4_Poker_Engine
         {
 
         }
-
         protected abstract void DealCards();
         protected abstract void BettingRound();
         protected virtual Player DetermineWinner()
         {
 
         }
+
+        #region Properties
+        public int MinimumPlayers
+        {
+            get { return minimumPlayers; }
+            private set { minimumPlayers = value; }
+        }
+        public int MaximumPlayers
+        {
+            get { return maximumPlayers; }
+            protected set { maximumPlayers = value; }
+        }
+        #endregion
     }
 }
