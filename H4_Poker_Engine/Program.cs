@@ -23,5 +23,3 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
-
-// this is a test
