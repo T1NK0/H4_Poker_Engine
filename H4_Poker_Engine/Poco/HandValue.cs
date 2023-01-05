@@ -17,13 +17,13 @@
     public class HandValue
     {
         private HandRank handRank;
-        private Rank rank;
+        private Card handRankCardType;
         private Card highCard;
 
-        public HandValue(Card highCard, Rank rank, HandRank handRank)
+        public HandValue(Card highCard, Card handRankCardType, HandRank handRank)
         {
             HighCard = highCard;
-            Rank = rank;
+            HandRankCardType = handRankCardType;
             HandRank = handRank;
         }
 
@@ -33,10 +33,10 @@
             set { highCard = value; }
         }
 
-        public Rank Rank
+        public Card HandRankCardType
         {
-            get { return rank; }
-            set { rank = value; }
+            get { return handRankCardType; }
+            set { handRankCardType = value; }
         }
         public HandRank HandRank
         {
