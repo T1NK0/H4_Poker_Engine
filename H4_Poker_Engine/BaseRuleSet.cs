@@ -27,26 +27,31 @@ namespace H4_Poker_Engine
         //override this and also take note of community cards, if playing texas hold em
         protected virtual Player DetermineWinner(List<Player> players)
         {
-            
-            List<KeyValuePair<Player, int>> playerValues = new List<KeyValuePair<Player, int>>();
+
+            List<KeyValuePair<Player, HandValue>> playerValues = new List<KeyValuePair<Player, HandValue>>();
 
             for (int i = 0; i < players.Count; i++)
             {
-                int value = _handEvaluator.GetHandValue(players[0].CardHand);
-                KeyValuePair<Player, int> kv = new KeyValuePair<Player, int>(players[0], value);
+                HandValue value = _handEvaluator.GetHandValue(players[0].CardHand);
+                KeyValuePair<Player, HandValue> kv = new KeyValuePair<Player, HandValue>(players[0], value);
                 playerValues.Add(kv);
             }
 
-            var group = playerValues.GroupBy(kv => kv.Value).First();
-            if (group.Count() > 1)
+            playerValues.OrderBy(kv => kv.Value.HandRank).ToList();
+            List<KeyValuePair<Player, HandValue>> highestHandRankplayers = playerValues.Where(kv => kv.Value.HandRank == playerValues[0].Value.HandRank).ToList();
+            if (highestHandRankplayers.Count > 1)
             {
+                //At least 2 players have the same HandRank
                 //Compare all players' highest card and determine winner
-
+                return playerValues[0].Key;
             }
-            return group.First().Key;
+            else
+            {
+                return playerValues[0].Key;
+            }
         }
 
-        
+
 
         #region Properties
         public int MinimumPlayers

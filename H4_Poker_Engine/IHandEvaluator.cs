@@ -4,6 +4,6 @@ namespace H4_Poker_Engine
 {
     public interface IHandEvaluator
     {
-        int GetHandValue(List<Card> hand);
+        HandValue GetHandValue(List<Card> hand);
     }
 }
