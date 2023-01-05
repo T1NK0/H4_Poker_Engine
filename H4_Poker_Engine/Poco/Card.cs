@@ -16,6 +16,7 @@ namespace H4_Poker_Engine.Poco
         SEVEN,
         EIGHT,
         NINE,
+        TEN,
         JACK,
         QUEEN,
         KING

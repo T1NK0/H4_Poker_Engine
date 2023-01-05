@@ -11,7 +11,13 @@ namespace H4_Poker_Engine
         #region Fields
         private int minimumPlayers;
         private int maximumPlayers;
-        #endregion       
+        private IHandEvaluator _handEvaluator;
+
+        protected BaseRuleSet(IHandEvaluator evaluator)
+        {
+            _handEvaluator = evaluator;
+        }
+        #endregion
 
         public abstract void RunPokerGame();
         protected abstract void AssignRoles(List<Player> players);
@@ -21,57 +27,26 @@ namespace H4_Poker_Engine
         //override this and also take note of community cards, if playing texas hold em
         protected virtual Player DetermineWinner(List<Player> players)
         {
+            
+            List<KeyValuePair<Player, int>> playerValues = new List<KeyValuePair<Player, int>>();
 
-            return players[0];
-        }
-
-        protected virtual int GetHandValue(List<Card> hand)
-        {
-            List<Card> cards = hand;
-
-            cards.OrderByDescending(card => card.Rank).ThenBy(card => card.Suit);
-
-            if (HasFlush(cards))
+            for (int i = 0; i < players.Count; i++)
             {
+                int value = _handEvaluator.GetHandValue(players[0].CardHand);
+                KeyValuePair<Player, int> kv = new KeyValuePair<Player, int>(players[0], value);
+                playerValues.Add(kv);
+            }
+
+            var group = playerValues.GroupBy(kv => kv.Value).First();
+            if (group.Count() > 1)
+            {
+                //Compare all players' highest card and determine winner
 
             }
-            if (HasStraight(cards)) 
-            {
-
-            }
+            return group.First().Key;
         }
 
-        private bool HasFlush(List<Card> cards)
-        {
-            foreach (Suit suit in Enum.GetValues(typeof(Suit)))
-            {
-                if (cards.FindAll(card => card.Suit == suit).Count >= 5)
-                    return true;
-            }
-            return false;
-        }
-
-        private bool HasStraight(List<Card> cards)
-        {
-            for (int i = 0; i < cards.Count - 4; i++)
-            {
-                bool isStraight = true;
-                for (int j = i; j < i + 5; j++)
-                {
-                    if (cards[j + 1].Rank != cards[j].Rank + 1)
-                    {
-                        isStraight = false;
-                        break;
-                    }
-                }
-
-                if (isStraight)
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
+        
 
         #region Properties
         public int MinimumPlayers
