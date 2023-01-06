@@ -67,7 +67,7 @@ namespace H4_Poker_Engine.Authentication
                 _role
             };
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.GetSection("AppSettings:Token").Value));
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["SecretKey"]));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
             //Creates the token with the credentials, the key and the roles etc we have made earlier.
             var token = new JwtSecurityToken(
