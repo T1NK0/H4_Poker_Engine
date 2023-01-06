@@ -1,5 +1,6 @@
 using H4_Poker_Engine.Authentication;
 using H4_Poker_Engine.Hubs;
+using H4_Poker_Engine.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -55,7 +56,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 // If the request is for our hub...
                 var path = context.HttpContext.Request.Path;
                 if (!string.IsNullOrEmpty(accessToken) &&
-                    (path.StartsWithSegments("/chat")))
+                    (path.StartsWithSegments("/poker")))
                 {
                     // Read the token out of the query string
                     context.Token = accessToken;
@@ -64,6 +65,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             }
         };
     });
+
+builder.Services.AddHostedService<TableServiceWorker>();
 
 // DependencyInjection
 builder.Services.AddScoped<TokenGenerator>();
