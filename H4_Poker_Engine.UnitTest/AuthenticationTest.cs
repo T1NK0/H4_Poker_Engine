@@ -11,23 +11,32 @@ namespace H4_Poker_Engine.UnitTest
 {
     public class AuthenticationTest
     {
-        //private TokenGenerator _tokenGenerator;
+        private IConfiguration _configuration;
+        private TokenGenerator _tokenGenerator;
 
         [SetUp]
         public void Setup()
         {
-            
+            _configuration = new ConfigurationBuilder()
+                .AddUserSecrets<AuthenticationTest>()
+                .AddEnvironmentVariables()
+                .Build();
+            _tokenGenerator = new TokenGenerator(_configuration);
         }
 
         [Test]
         public void GuestTokenShouldWork()
         {
-            var mock = new Mock<TokenGenerator>();
-            string loginToken = string.Empty;
-            mock.Setup( x => x.GenerateLoginToken());
+            
+            var loginToken = _tokenGenerator.GenerateLoginToken();
+            Thread.Sleep(500);
+            var newLoginToken = _tokenGenerator.GenerateLoginToken();
 
             Assert.That(loginToken, Is.Not.Null);
             Assert.That(loginToken, Is.Not.EqualTo(""));
+            Assert.That(newLoginToken, Is.Not.Null);
+            Assert.That(newLoginToken, Is.Not.EqualTo(""));
+            Assert.That(loginToken, Is.Not.EqualTo(newLoginToken));
         }
     }
 }
