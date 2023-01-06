@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using H4_Poker_Engine.Poco;
+using H4_Poker_Engine.Models;
 
-namespace H4_Poker_Engine
+namespace H4_Poker_Engine.PokerLogic
 {
     public abstract class BaseRuleSet
     {
@@ -21,7 +21,7 @@ namespace H4_Poker_Engine
 
         //public abstract void RunPokerGame();
         public abstract void AssignRoles(List<Player> players);
-        public abstract void DealCards(List<Player> playersToDeal,int amountToDeal);
+        public abstract void DealCards(List<Player> playersToDeal, int amountToDeal);
         public abstract void BettingRound(List<Player> playersInRound);
 
         //override this and also take note of community cards, if playing texas hold em
@@ -50,7 +50,7 @@ namespace H4_Poker_Engine
                 {
                     //if this is first iteration or if the [i] players rank is bigger thank the currently biggest,
                     //add him to winners and remove the old winner
-                    if (highestCard == null || 
+                    if (highestCard == null ||
                         highestHandRankPlayers[i].Value.HandRankCardType.Rank > highestCard.HandRankCardType.Rank)
                     {
                         winningPlayers.Clear();

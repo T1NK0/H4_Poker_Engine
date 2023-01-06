@@ -1,4 +1,4 @@
-﻿namespace H4_Poker_Engine.Poco
+﻿namespace H4_Poker_Engine.Models
 {
     public enum HandRank
     {
