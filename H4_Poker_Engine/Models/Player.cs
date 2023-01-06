@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace H4_Poker_Engine.Models
+﻿namespace H4_Poker_Engine.Models
 {
     //TODO give player turkey coins
     public class Player
