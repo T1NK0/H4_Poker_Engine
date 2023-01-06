@@ -1,4 +1,5 @@
 using H4_Poker_Engine.Authentication;
+using H4_Poker_Engine.Hubs;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -28,6 +29,8 @@ builder.Services.AddSwaggerGen(options =>
     options.OperationFilter<SecurityRequirementsOperationFilter>();
 });
 
+// adds signalR as service
+builder.Services.AddSignalR();
 
 // this is adding the authentication schema to the application 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -41,6 +44,24 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .GetBytes(builder.Configuration["SecretKey"])),
             ValidateIssuer = false,
             ValidateAudience = false,
+        };
+
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+
+                // If the request is for our hub...
+                var path = context.HttpContext.Request.Path;
+                if (!string.IsNullOrEmpty(accessToken) &&
+                    (path.StartsWithSegments("/chat")))
+                {
+                    // Read the token out of the query string
+                    context.Token = accessToken;
+                }
+                return Task.CompletedTask;
+            }
         };
     });
 
@@ -66,5 +87,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// SignalR hubs mappings
+app.MapHub<BasePokerHub>("/poker");
 
 app.Run();
