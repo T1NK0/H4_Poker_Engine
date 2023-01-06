@@ -3,16 +3,7 @@
 namespace H4_Poker_Engine.PokerLogic
 {
     public class HandEvaluator : IHandEvaluator
-    {
-        //private const int _royalFlushBonus = 999;
-        //private const int _straighFlushBonus = 500;
-        //private const int _fourKindBonus = 250;
-        //private const int _fullHouseBonus = 200;
-        //private const int _flushBonus = 150;
-        //private const int _straightBonus = 100;
-        //private const int _threeKindBonus = 50;
-        //private const int _twoPairBonus = 25;
-        //private const int _pairBonus = 20;
+    {       
         public virtual HandValue GetHandValue(List<Card> hand)
         {
             List<Card> cards = hand.OrderByDescending(card => card.Rank)
