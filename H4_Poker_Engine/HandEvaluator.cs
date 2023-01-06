@@ -88,7 +88,6 @@ namespace H4_Poker_Engine
                 //checks if all the elements in the royalFlush list are present in the cards list.
                 if (royalFlush.All(r => cards.Any(card => card.Rank == r)))
                 {
-
                     return new HandValue(cards.Where(c => !royalFlush.Contains(c.Rank)).OrderByDescending(c => c.Rank).First(),
                         cards.Find(card => card.Rank == Rank.KING),
                         HandRank.ROYALFLUSH);

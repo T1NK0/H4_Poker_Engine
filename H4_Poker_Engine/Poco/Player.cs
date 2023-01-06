@@ -9,6 +9,7 @@ namespace H4_Poker_Engine.Poco
     public class Player
     {
         private string _username;
+        private string _clientId;
         private bool _active;
         private int _money;
         private int _currentBetInRound;
@@ -25,6 +26,11 @@ namespace H4_Poker_Engine.Poco
         {
             get { return _username; }
             set { _username = value; }
+        }
+        public string ClientId
+        {
+            get { return _clientId; }
+            set { _clientId = value; }
         }
         public bool Active
         {
@@ -46,5 +52,6 @@ namespace H4_Poker_Engine.Poco
             get { return _cardHand; } 
             set { _cardHand = value; } 
         }
+
     }
 }
