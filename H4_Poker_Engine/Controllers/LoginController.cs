@@ -1,4 +1,5 @@
 ﻿using H4_Poker_Engine.Authentication;
+using H4_Poker_Engine.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -36,15 +37,15 @@ namespace H4_Poker_Engine.Controllers
         /// <param name="username"></param>
         /// <returns>Status of 200, and a user token, created from the TokenGenerator class.</returns>
         [HttpPost("usertoken"), Authorize]
-        public async Task<ActionResult> GetUserToken(string username)
+        public async Task<ActionResult> GetUserToken(LoginDTO request)
         {
-            if (username == string.Empty || username == "")
+            if (request.Username == string.Empty || request.Username == "")
             {
                 return BadRequest("Invalid or empty username");
             }
             else
             {
-                return Ok(_tokenGenerator.GenerateUserToken(username));
+                return Ok(_tokenGenerator.GenerateUserToken(request.Username));
             }
         }
         #endregion
