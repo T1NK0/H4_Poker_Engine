@@ -67,9 +67,13 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 builder.Services.AddHostedService<TableServiceWorker>();
+builder.Services.AddHostedService<TableServiceWorker2>();
 
 // DependencyInjection
 builder.Services.AddScoped<TokenGenerator>();
+builder.Services.AddSingleton<BasePokerHub>();
+builder.Services.AddSingleton<BasePokerHub2>();
+
 
 var app = builder.Build();
 
@@ -93,5 +97,6 @@ app.MapControllers();
 
 // SignalR hubs mappings
 app.MapHub<BasePokerHub>("/poker");
+app.MapHub<BasePokerHub2>("/poker2");
 
 app.Run();

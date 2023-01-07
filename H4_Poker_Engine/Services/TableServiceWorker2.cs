@@ -3,12 +3,14 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace H4_Poker_Engine.Services
 {
-    public class TableServiceWorker : BackgroundService
+    public class TableServiceWorker2 : BackgroundService
     {
         private readonly IHubContext<BasePokerHub> _hubContext;
+        private string? _user;
+        private string? _message;
         private List<string> _users;
 
-        public TableServiceWorker(IHubContext<BasePokerHub> hubContext, BasePokerHub hub)
+        public TableServiceWorker2(IHubContext<BasePokerHub> hubContext, BasePokerHub2 hub)
         {
             _hubContext = hubContext;
 
@@ -18,25 +20,25 @@ namespace H4_Poker_Engine.Services
             }
             // Subscribe to event
             //hub.OnMessage += DoSomethingAsync;
-            hub.NewPlayerConnectedEvent += AddNewPlayerToGame;
-            hub.PlayerHasDisconnectedEvent += RemovePlayerFromGame;
+            hub.NewPlayer += DoSomethingAsync2;
 
             //hub.NewPlayer2 += DoSomethingAsync;
 
 
         }
 
-        private void AddNewPlayerToGame(string user, string message, string clientId)
+        private void DoSomethingAsync2(string arg1, string arg2, string arg3)
         {
-            _users.Add(clientId);
-            Console.WriteLine($"New player added, total number of users: {_users.Count()}");
+            _users.Add(arg3);
+            Console.WriteLine($"From Hub 2; number of users: {_users.Count()}");
         }
 
-        private  void RemovePlayerFromGame(string user, string message, string clientId)
+        private async void DoSomethingAsync(string user, string message, string clientId)
         {
-            _users.Remove(clientId);
-            Console.WriteLine($"Player {user} removed from game, total number of players: {_users.Count()}");
-            
+            Console.WriteLine("Enter listener method from worker!");
+            _user= user;
+            _message= message;
+            await _hubContext.Clients.All.SendAsync("ReceiveMessage", _user, _message);
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
