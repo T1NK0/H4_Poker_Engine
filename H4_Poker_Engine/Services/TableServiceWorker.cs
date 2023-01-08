@@ -16,14 +16,10 @@ namespace H4_Poker_Engine.Services
             {
                 _users = new List<string>();
             }
+
             // Subscribe to event
-            //hub.OnMessage += DoSomethingAsync;
             hub.NewPlayerConnectedEvent += AddNewPlayerToGame;
             hub.PlayerHasDisconnectedEvent += RemovePlayerFromGame;
-
-            //hub.NewPlayer2 += DoSomethingAsync;
-
-
         }
 
         private void AddNewPlayerToGame(string user, string message, string clientId)
@@ -41,12 +37,7 @@ namespace H4_Poker_Engine.Services
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            //while(!stoppingToken.IsCancellationRequested)
-            //{
-            //    await Task.Delay(1000);
-            //    //await _hubContext.Clients.All.SendAsync("ReceiveMessage", _user, _message);
-            //    Console.WriteLine($"number of users: {_user.Count()}");
-            //}
+            // TODO: some logic here!?
         }
     }
 }
