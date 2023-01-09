@@ -102,7 +102,7 @@ namespace H4_Poker_Engine.Services
 
         private async void AddNewPlayerToGameAsync(string user, string message, string clientId)
         {
-            var newPlayer = new Player() { Username = user, ClientId = clientId, Active = false, Money = 200 };
+            var newPlayer = new Player(user, clientId);
             _players.Add(newPlayer);
             Console.WriteLine($"New player added, total number of users: {_players.Count()}");
             await _hubContext.Clients.All.SendAsync("SendMessage", newPlayer.Username);
@@ -160,11 +160,16 @@ namespace H4_Poker_Engine.Services
             _deck = _deckFactory.GetNewDeck();
             _potManager.TotalPotAmount = 0;
 
+            //if there's no big blind, we assume there is no small blind either.
+            if (!_players.Any(p => p.Role == Role.BIG_BLIND))
+                SetBlinds();
+
+
             _roleManager.MoveRoles(_players, _potManager.Small_Blind, _potManager.Big_Blind);
             SetTurnOrder();
 
-            //TODO Set players inactive if they have no cash and notify them
-            PayBlindsAsync();
+            //TODO Set players inactive(done) if they have no cash and notify them
+            await PayBlindsAsync();
 
 
             _rules.DealCards(_players, _deck, 2);
@@ -199,6 +204,17 @@ namespace H4_Poker_Engine.Services
             await _hubContext.Clients.All.SendAsync("ShowWinners", winners);
             _potManager.PayOutPotToWinners(winners);
             winners.ForEach(player => UpdatePlayerAmountAsync(player));
+        }
+
+        private void SetBlinds()
+        {
+            //Set blinds randomly at start of game
+            int smallBlindIndex = new Random().Next(0, _players.Count);
+            _players[smallBlindIndex].Role = Role.SMALL_BLIND;
+            if (smallBlindIndex == _players.Count)
+                _players[0].Role = Role.BIG_BLIND;
+            else
+                _players[smallBlindIndex + 1].Role = Role.BIG_BLIND;
         }
 
 

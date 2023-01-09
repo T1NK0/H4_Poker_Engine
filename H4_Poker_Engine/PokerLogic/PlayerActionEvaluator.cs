@@ -8,7 +8,7 @@ namespace H4_Poker_Engine.PokerLogic
         {
             Dictionary<string, bool> validActions = new Dictionary<string, bool>
             {
-                { "call", CanCall(player, potManager) },
+                { "call", CanCall(player, potManager, hasRaised) },
                 { "raise", CanRaise(player, potManager) },
                 { "check", CanCheck(player, hasRaised) },
                 { "Fold", true }
@@ -17,7 +17,7 @@ namespace H4_Poker_Engine.PokerLogic
             return validActions;
         }
 
-        private bool CanCall(Player player, PotManager potManager)
+        private bool CanCall(Player player, PotManager potManager, bool hasRaised)
         {
             return true;
         }
