@@ -15,9 +15,18 @@ namespace H4_Poker_Engine.PokerLogic
         }
         #endregion
 
-        //public abstract void RunPokerGame();
         public abstract void AssignRoles(List<Player> players);
-        public abstract void DealCards(List<Player> playersToDeal, int amountToDeal);
+        public virtual void DealCards(List<Player> playersToDeal, List<Card> deck, int amountToDeal)
+        {
+            for (int i = 0; i < playersToDeal.Count; i++)
+            {
+                for (int j = 0; j < amountToDeal; j++)
+                {
+                    playersToDeal[i].CardHand.Add(deck.First());
+                    deck.RemoveAt(0);
+                }
+            }
+        }
         public abstract void BettingRound(List<Player> playersInRound);
 
         //override this and also take note of community cards, if playing texas hold em

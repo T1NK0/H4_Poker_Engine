@@ -1,5 +1,13 @@
 ﻿namespace H4_Poker_Engine.Models
 {
+    public enum Role
+    {
+        NONE,
+        BIG_BLIND,
+        SMALL_BLIND,
+        DEALER
+    };
+
     //TODO give player turkey coins
     public class Player
     {
@@ -8,14 +16,14 @@
         private bool _active;
         private int _money;
         private int _currentBetInRound;
+        private Role role = Role.NONE;        
+
         private List<Card> _cardHand;
 
         public Player()
         {
             _cardHand = new List<Card>();
         }
-
-
 
         public string Username
         {
@@ -46,6 +54,11 @@
         { 
             get { return _cardHand; } 
             set { _cardHand = value; } 
+        }
+        public Role Role
+        {
+            get { return role; }
+            set { role = value; }
         }
 
     }
