@@ -31,7 +31,7 @@ namespace H4_Poker_Engine.Hubs
         [Authorize]
         public async Task PlayerMove(string user, string message, int amount, string clientId)
         {
-
+            PlayerMadeActionEvent?.Invoke(user, message, amount, clientId);
         }
     }
 }

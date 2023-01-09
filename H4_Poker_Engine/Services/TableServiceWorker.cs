@@ -148,6 +148,7 @@ namespace H4_Poker_Engine.Services
 
             _roleManager.MoveRoles(_players);
             SetTurnOrder();
+            //TODO Set players inactive if they have no cash and notify them
             PayBlinds();
 
 
