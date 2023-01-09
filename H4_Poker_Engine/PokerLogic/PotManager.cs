@@ -13,8 +13,8 @@ namespace H4_Poker_Engine.PokerLogic
 
         public int Small_Blind
         {
-            get { return small_blind = 10; }
-            set { small_blind = 10 = value; }
+            get { return small_blind; }
+            set { small_blind = value; }
         }
 
 
@@ -37,8 +37,14 @@ namespace H4_Poker_Engine.PokerLogic
             set { _totalPotAmount = value; }
         }
 
-        public void AddToPot(int potToAdd)
+        /// <summary>
+        /// Takes <paramref name="potToAdd"/> from the <paramref name="playerToTakeFrom"/>
+        /// </summary>
+        /// <param name="potToAdd"></param>
+        /// <param name="playerToTakeFrom"></param>
+        public void AddToPot(int potToAdd, Player playerToTakeFrom)
         {
+            playerToTakeFrom.Money -= potToAdd;
             TotalPotAmount += potToAdd;
         }
 
@@ -48,7 +54,19 @@ namespace H4_Poker_Engine.PokerLogic
         /// <param name="winningPlayers"></param>
         public void PayOutPotToWinners(List<Player> winningPlayers)
         {
+            if (winningPlayers.Count == 1)
+            {
+                winningPlayers[0].Money += TotalPotAmount;
+            }
+            else
+            {
+                int winningAmount = TotalPotAmount / winningPlayers.Count;
 
+                for (int i = 0; i < winningPlayers.Count; i++)
+                {
+                    winningPlayers[i].Money += winningAmount;
+                }
+            }
         }
     }
 }

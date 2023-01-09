@@ -56,27 +56,28 @@ namespace H4_Poker_Engine.Services
             switch (action)
             {
                 case "call":
-                    _potManager.AddToPot(amount);
-                    await _hubContext.Clients.All.SendAsync("PlayerCall", player.Username, amount);
+                    _potManager.AddToPot(amount, player);
+                    await _hubContext.Clients.All
+                        .SendAsync("SendMessage", $"{player.Username} has called and added {amount} to the pot");
                     UpdatePot();
+                    UpdatePlayerAmount(player);
                     break;
                 case "raise":
-                    _potManager.AddToPot(amount);
                     _hasRaised = true;
-                    await _hubContext.Clients.All.SendAsync("PlayerRaise", player.Username, amount);
+                    _potManager.AddToPot(amount, player);
+                    await _hubContext.Clients.All
+                        .SendAsync("SendMessage", $"{player.Username} has raised the pot with {amount} turkey coins!");
                     UpdatePot();
+                    UpdatePlayerAmount(player);
                     break;
                 case "fold":
                     player.Active = false;
-                    List<Player> activePlayers = _players.Where(p => p.Active).ToList();
-                    for (int i = 0; i < activePlayers.Count; i++)
-                    {
-                        await _hubContext.Clients.Client(activePlayers[i].ClientId)
-                            .SendAsync("PlayerFold", activePlayers[i].Username);
-                    }
+                    await _hubContext.Clients.All
+                        .SendAsync("SendMessage", $"{player.Username} has folded");
                     break;
                 case "check":
-                    await _hubContext.Clients.All.SendAsync("PlayerCheck", player.Username);
+                    await _hubContext.Clients.All
+                        .SendAsync("SendMessage", $"{player.Username} checks");
                     break;
             }
             _playerThinking = false;
@@ -87,12 +88,17 @@ namespace H4_Poker_Engine.Services
             await _hubContext.Clients.All.SendAsync("UpdatePot", _potManager.TotalPotAmount);
         }
 
+        private async void UpdatePlayerAmount(Player player)
+        {
+            await _hubContext.Clients.Client(player.ClientId).SendAsync("UpdateMoney", player.Money);
+        }
+
         private async void AddNewPlayerToGame(string user, string message, string clientId)
         {
-            var newPlayer = new Player() { Username = user, ClientId = clientId, Active = false };
+            var newPlayer = new Player() { Username = user, ClientId = clientId, Active = false, Money = 200 };
             _players.Add(newPlayer);
             Console.WriteLine($"New player added, total number of users: {_players.Count()}");
-            await _hubContext.Clients.All.SendAsync("PlayerJoin", newPlayer.Username);
+            await _hubContext.Clients.All.SendAsync("SendMessage", newPlayer.Username);
         }
 
         private async void RemovePlayerFromGame(string user, string message, string clientId)
@@ -102,7 +108,7 @@ namespace H4_Poker_Engine.Services
             {
                 _players.Remove(playerToRemove);
                 Console.WriteLine($"Player {user} removed from game, total number of players: {_players.Count()}");
-                await _hubContext.Clients.All.SendAsync("PlayerLeave", playerToRemove.Username);
+                await _hubContext.Clients.All.SendAsync("SendMessage", $"{playerToRemove.Username} has left");
             }
         }
         private async void PlayerIsReadyToPlay(string user, string message, string clientId)
@@ -112,7 +118,7 @@ namespace H4_Poker_Engine.Services
             {
                 playerToBeReady.Active = true;
                 Console.WriteLine($"Player {user} is ready to play, status is set to {playerToBeReady.Active}");
-                await _hubContext.Clients.All.SendAsync("PlayerReady", playerToBeReady.Username);
+                await _hubContext.Clients.All.SendAsync("SendMessage", $"{playerToBeReady.Username} is ready!");
             }
             CheckIfGameCanBegin();
         }
@@ -182,22 +188,23 @@ namespace H4_Poker_Engine.Services
 
             List<Player> winners = _rules.DetermineWinner(_players.Where(player => player.Active).ToList());
             await _hubContext.Clients.All.SendAsync("ShowWinners", winners);
+            _potManager.PayOutPotToWinners(winners);
+            winners.ForEach(player => UpdatePlayerAmount(player));
         }
 
+
+        /// <summary>
+        /// Force players with the <see cref="Role.BIG_BLIND"/> and <seealso cref="Role.SMALL_BLIND"/> to pay their blinds
+        /// </summary>
         private void PayBlinds()
         {
             for (int i = 0; i < _players.Count; i++)
             {
                 if (_players[i].Role == Role.BIG_BLIND)
-                {
-                    _potManager.AddToPot(_potManager.Big_Blind);
-                    _players[i].Money -= _potManager.Big_Blind;
-                }
+                    _potManager.AddToPot(_potManager.Big_Blind, _players[i]);
+
                 else if (_players[i].Role == Role.SMALL_BLIND)
-                {
-                    _potManager.AddToPot(_potManager.Small_Blind);
-                    _players[i].Money -= _potManager.Small_Blind;
-                }
+                    _potManager.AddToPot(_potManager.Small_Blind, _players[i]);
             }
         }
 
@@ -245,6 +252,7 @@ namespace H4_Poker_Engine.Services
 
         private void SetTurnOrder()
         {
+            //Swap the order of the 2 players
             if (_players.Count == 2)
             {
                 Player nextPlayer = _players[0];

@@ -4,7 +4,7 @@ namespace H4_Poker_Engine.PokerLogic
 {
     public class RoleManager
     {
-        private int _currentPlayerIndex;
+        private int _currentPlayerIndex = 0;
         public void MoveRoles(List<Player> players)
         {
             // Increment the current player index and wrap around if necessary

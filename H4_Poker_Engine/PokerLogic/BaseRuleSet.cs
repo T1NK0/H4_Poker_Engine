@@ -28,7 +28,7 @@ namespace H4_Poker_Engine.PokerLogic
                 }
             }
         }
-        public abstract void BettingRound(List<Player> playersInRound);
+        //public abstract void BettingRound(List<Player> playersInRound);
 
         //override this and also take note of community cards, if playing texas hold em
         public virtual List<Player> DetermineWinner(List<Player> players)
