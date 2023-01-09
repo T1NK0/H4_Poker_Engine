@@ -1,5 +1,7 @@
 ﻿using H4_Poker_Engine.Hubs;
+using H4_Poker_Engine.Interfaces;
 using H4_Poker_Engine.Models;
+using H4_Poker_Engine.PokerLogic;
 using Microsoft.AspNetCore.SignalR;
 using System.Numerics;
 using System.Security.Cryptography;
@@ -9,49 +11,114 @@ namespace H4_Poker_Engine.Services
     public class TableServiceWorker : BackgroundService
     {
         private readonly IHubContext<BasePokerHub> _hubContext;
-        private List<Player> _users;
-        private List<CardModel> _deck;
+        private IDeckFactory _deckFactory;
+        private List<Player> _players;
+        private List<Card> _deck;
+        private BaseRuleSet _rules;
+        private PotManager _potManager;
+        private RoleManager _roleManager;
         private bool _isGameRunning = false;
+        private bool _hasRaised = false;
+        private bool _playerThinking = false;
 
-        public TableServiceWorker(IHubContext<BasePokerHub> hubContext, BasePokerHub hub)
+        public TableServiceWorker(IHubContext<BasePokerHub> hubContext, BasePokerHub hub,
+            BaseRuleSet ruleSet, IDeckFactory deckFactory)
         {
             _hubContext = hubContext;
+            _rules = ruleSet;
+            _deckFactory = deckFactory;
 
-            if (_users == null)
+            if (_players == null)
             {
-                _users = new List<Player>();
+                _players = new List<Player>();
             }
+            if (_potManager == null)
+            {
+                _potManager = new PotManager();
+            }
+            if (_roleManager == null)
+            {
+                _roleManager = new RoleManager();
+            }
+
 
             // Subscribe to event
             hub.NewPlayerConnectedEvent += AddNewPlayerToGame;
             hub.PlayerHasDisconnectedEvent += RemovePlayerFromGame;
             hub.PlayerIsReadyEvent += PlayerIsReadyToPlay;
+            hub.PlayerMadeActionEvent += PlayerMadeAction;
         }
 
-
-        private void AddNewPlayerToGame(string user, string message, string clientId)
+        private async void PlayerMadeAction(string user, string action, int amount, string clientId)
         {
-            var newPlayer = new Player() { Username = user, ClientId = clientId, Active = false };
-            _users.Add(newPlayer);
-            Console.WriteLine($"New player added, total number of users: {_users.Count()}");
+            Player player = _players.Where(p => p.ClientId == clientId).First();
+
+            switch (action)
+            {
+                case "call":
+                    _potManager.AddToPot(amount, player);
+                    await _hubContext.Clients.All
+                        .SendAsync("SendMessage", $"{player.Username} has called and added {amount} to the pot");
+                    UpdatePot();
+                    UpdatePlayerAmount(player);
+                    break;
+                case "raise":
+                    _hasRaised = true;
+                    _potManager.AddToPot(amount, player);
+                    await _hubContext.Clients.All
+                        .SendAsync("SendMessage", $"{player.Username} has raised the pot with {amount} turkey coins!");
+                    UpdatePot();
+                    UpdatePlayerAmount(player);
+                    break;
+                case "fold":
+                    player.Active = false;
+                    await _hubContext.Clients.All
+                        .SendAsync("SendMessage", $"{player.Username} has folded");
+                    break;
+                case "check":
+                    await _hubContext.Clients.All
+                        .SendAsync("SendMessage", $"{player.Username} checks");
+                    break;
+            }
+            _playerThinking = false;
         }
 
-        private void RemovePlayerFromGame(string user, string message, string clientId)
+        private async void UpdatePot()
         {
-            var playerToRemove = _users.Find(player => player.ClientId == clientId);
+            await _hubContext.Clients.All.SendAsync("UpdatePot", _potManager.TotalPotAmount);
+        }
+
+        private async void UpdatePlayerAmount(Player player)
+        {
+            await _hubContext.Clients.Client(player.ClientId).SendAsync("UpdateMoney", player.Money);
+        }
+
+        private async void AddNewPlayerToGame(string user, string message, string clientId)
+        {
+            var newPlayer = new Player() { Username = user, ClientId = clientId, Active = false, Money = 200 };
+            _players.Add(newPlayer);
+            Console.WriteLine($"New player added, total number of users: {_players.Count()}");
+            await _hubContext.Clients.All.SendAsync("SendMessage", newPlayer.Username);
+        }
+
+        private async void RemovePlayerFromGame(string user, string message, string clientId)
+        {
+            var playerToRemove = _players.Find(player => player.ClientId == clientId);
             if (playerToRemove != null)
             {
-                _users.Remove(playerToRemove);
-                Console.WriteLine($"Player {user} removed from game, total number of players: {_users.Count()}");
+                _players.Remove(playerToRemove);
+                Console.WriteLine($"Player {user} removed from game, total number of players: {_players.Count()}");
+                await _hubContext.Clients.All.SendAsync("SendMessage", $"{playerToRemove.Username} has left");
             }
         }
-        private void PlayerIsReadyToPlay(string user, string message, string clientId)
+        private async void PlayerIsReadyToPlay(string user, string message, string clientId)
         {
-            var playerToBeReady = _users.Find(player => player.ClientId == clientId);
+            var playerToBeReady = _players.Find(player => player.ClientId == clientId);
             if (playerToBeReady != null)
             {
                 playerToBeReady.Active = true;
                 Console.WriteLine($"Player {user} is ready to play, status is set to {playerToBeReady.Active}");
+                await _hubContext.Clients.All.SendAsync("SendMessage", $"{playerToBeReady.Username} is ready!");
             }
             CheckIfGameCanBegin();
         }
@@ -59,82 +126,164 @@ namespace H4_Poker_Engine.Services
         private void CheckIfGameCanBegin()
         {
             var numberOfPlayersReady = 0;
-            foreach (var player in _users)
+            foreach (var player in _players)
             {
                 if (player.Active)
                 {
                     numberOfPlayersReady++;
                 }
             }
-            if (numberOfPlayersReady >= 2 && _isGameRunning == false)
+            if (numberOfPlayersReady >= _rules.MinimumPlayers
+                && numberOfPlayersReady == _players.Count
+                && _isGameRunning == false)
             {
                 _isGameRunning = true;
-                GiveCards();
-            }
-        }
-
-        private async void GiveCards()
-        {
-            GetANewDeck();
-            foreach (var player in _users)
-            {
-                var firstCard = _deck.FirstOrDefault();
-                _deck.Remove(firstCard);
-                var secondCard = _deck.FirstOrDefault();
-                _deck.Remove(secondCard);
-                await _hubContext.Clients.Client(player.ClientId).SendAsync("GetPlayerCards", firstCard, secondCard);
-            }
-            var tableFirstCard = _deck.FirstOrDefault();
-            _deck.Remove(tableFirstCard);
-            var tableSecondCard = _deck.FirstOrDefault();
-            _deck.Remove(tableSecondCard);
-            var tableTheedCard = _deck.FirstOrDefault();
-            _deck.Remove(tableTheedCard);
-            await _hubContext.Clients.All.SendAsync("GetTableCards", tableFirstCard, tableSecondCard, tableTheedCard);
-        }
-
-        private void GetANewDeck()
-        {
-            if (_deck == null)
-            {
-                _deck = new List<CardModel>();
-            }
-            else
-            {
-                _deck.Clear();
-            }
-            List<CardModel> deck = new List<CardModel>();
-
-            string[] suits = { "hearts", "diamonds", "spades", "clubs" };
-            string[] values = { "ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "jack", "queen", "king" };
-
-            foreach (string suit in suits)
-            {
-                foreach (string value in values)
+                BeginGame();
+                //Game is over and all players need to press ready again for a new round to begin
+                _isGameRunning = false;
+                foreach (Player player in _players)
                 {
-                    deck.Add(new CardModel(suit, value));
+                    player.Active = false;
                 }
             }
-
-            _deck = Shuffle(deck);
         }
 
-        private List<CardModel> Shuffle(List<CardModel> deck)
+        private async void BeginGame()
         {
-            var rng = RandomNumberGenerator.Create();
-            int n = deck.Count;
-            while (n > 1)
+            _deck = _deckFactory.GetNewDeck();
+            _potManager.TotalPotAmount = 0;
+            _roleManager.MoveRoles(_players);
+            SetTurnOrder();
+            //TODO Set players inactive if they have no cash and notify them
+            PayBlindsAsync();
+
+
+            _rules.DealCards(_players, _deck, 2);
+            foreach (Player player in _players)
             {
-                byte[] box = new byte[1];
-                do rng.GetBytes(box);
-                while (!(box[0] < n * (Byte.MaxValue / n)));
-                int k = (box[0] % n);
-                n--;
-                CardModel value = deck[k];
-                deck[k] = deck[n];
-                deck[n] = value;
+                await _hubContext.Clients.Client(player.ClientId)
+                    .SendAsync("GetPlayerCards", player.CardHand[0], player.CardHand[1]);
             }
-            return deck;
+
+            for (int i = 0; i < 5; i++)
+            {
+                //Check if there are any players left to keep the rounds going
+                if (_players.Count(p => p.Active) > 1)
+                {
+                    do
+                    {
+                        _hasRaised = false;
+                        BettingRound();
+                    } while (_hasRaised);
+                    DealCommunityCards(i);
+                }
+                else
+                    i = 5;
+            }
+            //Do showdown
+            if (_players.Count(player => player.Active) > 1)
+            {
+                await _hubContext.Clients.All.SendAsync("Showdown", _players.Where(p => p.Active).ToList());
+            }
+
+            List<Player> winners = _rules.DetermineWinner(_players.Where(player => player.Active).ToList());
+            await _hubContext.Clients.All.SendAsync("ShowWinners", winners);
+            _potManager.PayOutPotToWinners(winners);
+            winners.ForEach(player => UpdatePlayerAmount(player));
+        }
+
+
+        /// <summary>
+        /// Force players with the <see cref="Role.BIG_BLIND"/> and <seealso cref="Role.SMALL_BLIND"/> to pay their blinds
+        /// </summary>
+        private async Task PayBlindsAsync()
+        {
+            for (int i = 0; i < _players.Count; i++)
+            {
+                if (_players[i].Role == Role.BIG_BLIND)
+                {
+                    _potManager.AddToPot(_potManager.Big_Blind, _players[i]);
+                    await _hubContext.Clients.All.SendAsync("SendMessage", $"{_players[i].Username} has paid {_potManager.Big_Blind} as big blind");
+                }
+
+                else if (_players[i].Role == Role.SMALL_BLIND)
+                {
+                    _potManager.AddToPot(_potManager.Small_Blind, _players[i]);
+                    await _hubContext.Clients.All.SendAsync("SendMessage", $"{_players[i].Username} has paid {_potManager.Big_Blind} as small blind");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Deals a number of Cards depending on the round number, River(1), Turn(2), Flop(3)
+        /// </summary>
+        /// <param name="roundNumber"></param>
+        private async void DealCommunityCards(int roundNumber)
+        {
+            if (roundNumber == 1)
+            {
+                Card tableFirstCard = _deck.FirstOrDefault();
+                _deck.Remove(tableFirstCard);
+                Card tableSecondCard = _deck.FirstOrDefault();
+                _deck.Remove(tableSecondCard);
+                Card tableThirdCard = _deck.FirstOrDefault();
+                _deck.Remove(tableThirdCard);
+                await _hubContext.Clients.All.SendAsync("GetFlop", tableFirstCard, tableSecondCard, tableThirdCard);
+            }
+            else if (roundNumber == 2)
+            {
+                await _hubContext.Clients.All.SendAsync("GetTurn", _deck.First());
+                _deck.RemoveAt(0);
+            }
+            else if (roundNumber == 3)
+            {
+                await _hubContext.Clients.All.SendAsync("GetRiver", _deck.First());
+                _deck.RemoveAt(0);
+            }
+        }
+
+        private async void BettingRound()
+        {
+            for (int i = 0; i < _players.Count; i++)
+            {
+                if (_players[i].Active)
+                {
+                    Player currentUser = _players[i];
+                    _playerThinking = true;
+                    await _hubContext.Clients.Client(currentUser.ClientId).SendAsync("ActionReady");
+                    while (_playerThinking) ;
+                }
+            }
+        }
+
+        private void SetTurnOrder()
+        {
+            //Swap the order of the 2 players
+            if (_players.Count == 2)
+            {
+                Player nextPlayer = _players[0];
+                _players.Remove(nextPlayer);
+                _players.Add(nextPlayer);
+            }
+            if (_players.Count >= 3)
+            {
+                int bigBlindIndex = -1;
+                for (int i = 0; i < _players.Count; i++)
+                {
+                    if (_players[i].Role == Role.BIG_BLIND)
+                    {
+                        bigBlindIndex = i;
+                        break;
+                    }
+                }
+
+                if (bigBlindIndex >= 0)
+                {
+                    Player nextPlayer = _players[(bigBlindIndex + 1) % _players.Count];
+                    _players.Remove(nextPlayer);
+                    _players.Insert(0, nextPlayer);
+                }
+            }
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
