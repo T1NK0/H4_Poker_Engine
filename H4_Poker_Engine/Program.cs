@@ -71,7 +71,6 @@ builder.Services.AddHostedService<TableServiceWorker>();
 
 // DependencyInjection
 builder.Services.AddScoped<TokenGenerator>();
-builder.Services.AddScoped<TokenGenerator>();
 builder.Services.AddSingleton<BasePokerHub>();
 
 
