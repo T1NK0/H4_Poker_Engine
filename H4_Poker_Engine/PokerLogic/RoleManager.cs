@@ -1,25 +1,38 @@
 ﻿using H4_Poker_Engine.Models;
+using Microsoft.AspNetCore.Identity;
+using System.Linq;
 
 namespace H4_Poker_Engine.PokerLogic
 {
     public class RoleManager
     {
-        private int _currentPlayerIndex = 0;
-        public void MoveRoles(List<Player> players)
+        private void MoveRole(List<Player> players, Role payingRole, int amountToPay)
         {
-            // Increment the current player index and wrap around if necessary
-            _currentPlayerIndex = (_currentPlayerIndex + 1) % players.Count;
+            //loop through players until you find a suitable person for the role
+            int indexOffset = 0;
+            int currentRoleHolder = players.IndexOf(players.Find(p => p.Role == payingRole));
 
-            // Assign the new roles to the players
-            players[_currentPlayerIndex].Role = Role.DEALER;
-            players[(_currentPlayerIndex + 1) % players.Count].Role = Role.BIG_BLIND;
-            players[(_currentPlayerIndex + 2) % players.Count].Role = Role.SMALL_BLIND;
-
-            // Clear the roles of the other players
-            for (int i = 3; i < players.Count; i++)
+            for (int i = 1; i < players.Count; i++)
             {
-                players[(_currentPlayerIndex + i) % players.Count].Role = Role.NONE;
+                indexOffset = (currentRoleHolder + i) % players.Count;
+
+                if (players[indexOffset].Money >= amountToPay && players[indexOffset].Active)
+                {
+                    players[indexOffset].Role = payingRole;
+                    players[currentRoleHolder].Role = Role.NONE;
+                    i = players.Count;
+                }
+                else
+                {
+                    players[indexOffset].Active = false;
+                }
             }
+        }
+
+        public void MoveRoles(List<Player> players, int smallBlind, int bigBlind)
+        {
+            MoveRole(players, Role.BIG_BLIND, bigBlind);
+            MoveRole(players, Role.SMALL_BLIND, smallBlind);
         }
     }
 }

@@ -45,6 +45,7 @@ namespace H4_Poker_Engine.PokerLogic
         public void AddToPot(int potToAdd, Player playerToTakeFrom)
         {
             playerToTakeFrom.Money -= potToAdd;
+            playerToTakeFrom.CurrentBetInRound += potToAdd;
             TotalPotAmount += potToAdd;
         }
 
