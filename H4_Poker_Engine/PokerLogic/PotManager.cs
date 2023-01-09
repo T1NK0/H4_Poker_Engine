@@ -7,9 +7,9 @@ namespace H4_Poker_Engine.PokerLogic
         private int _totalPotAmount;
 
         private int _currentRoundAmount;
-        private int big_blind = 5;
+        private int big_blind = 10;
 
-        private int small_blind = 10;
+        private int small_blind = 5;
 
         public int Small_Blind
         {

@@ -151,11 +151,11 @@ namespace H4_Poker_Engine.Services
         private async void BeginGame()
         {
             _deck = _deckFactory.GetNewDeck();
-
+            _potManager.TotalPotAmount = 0;
             _roleManager.MoveRoles(_players);
             SetTurnOrder();
             //TODO Set players inactive if they have no cash and notify them
-            PayBlinds();
+            PayBlindsAsync();
 
 
             _rules.DealCards(_players, _deck, 2);
@@ -196,15 +196,21 @@ namespace H4_Poker_Engine.Services
         /// <summary>
         /// Force players with the <see cref="Role.BIG_BLIND"/> and <seealso cref="Role.SMALL_BLIND"/> to pay their blinds
         /// </summary>
-        private void PayBlinds()
+        private async Task PayBlindsAsync()
         {
             for (int i = 0; i < _players.Count; i++)
             {
                 if (_players[i].Role == Role.BIG_BLIND)
+                {
                     _potManager.AddToPot(_potManager.Big_Blind, _players[i]);
+                    await _hubContext.Clients.All.SendAsync("SendMessage", $"{_players[i].Username} has paid {_potManager.Big_Blind} as big blind");
+                }
 
                 else if (_players[i].Role == Role.SMALL_BLIND)
+                {
                     _potManager.AddToPot(_potManager.Small_Blind, _players[i]);
+                    await _hubContext.Clients.All.SendAsync("SendMessage", $"{_players[i].Username} has paid {_potManager.Big_Blind} as small blind");
+                }
             }
         }
 
