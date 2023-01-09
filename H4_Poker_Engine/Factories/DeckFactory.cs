@@ -1,8 +1,9 @@
-﻿using H4_Poker_Engine.Models;
+﻿using H4_Poker_Engine.Interfaces;
+using H4_Poker_Engine.Models;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 
-namespace H4_Poker_Engine
+namespace H4_Poker_Engine.Factories
 {
     public class DeckFactory : IDeckFactory
     {
@@ -17,7 +18,7 @@ namespace H4_Poker_Engine
                     cards.Add(new Card(rank, suit));
                 }
             }
-
+            ShuffleDeck(cards);
             return cards;
         }
 
@@ -29,10 +30,10 @@ namespace H4_Poker_Engine
             {
                 byte[] box = new byte[1];
                 do rng.GetBytes(box);
-                while (!(box[0] < n * (Byte.MaxValue / n)));
-                int k = (box[0] % n);
+                while (!(box[0] < n * (byte.MaxValue / n)));
+                int k = box[0] % n;
                 n--;
-                CardModel value = deck[k];
+                Card value = deck[k];
                 deck[k] = deck[n];
                 deck[n] = value;
             }

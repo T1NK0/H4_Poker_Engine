@@ -1,4 +1,5 @@
 ﻿using H4_Poker_Engine.Hubs;
+using H4_Poker_Engine.Interfaces;
 using H4_Poker_Engine.Models;
 using H4_Poker_Engine.PokerLogic;
 using Microsoft.AspNetCore.SignalR;
