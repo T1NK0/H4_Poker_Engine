@@ -148,6 +148,8 @@ namespace H4_Poker_Engine.Services
 
             _roleManager.MoveRoles(_players);
             SetTurnOrder();
+            PayBlinds();
+
 
             _rules.DealCards(_players, _deck, 2);
             foreach (Player player in _players)
@@ -179,6 +181,23 @@ namespace H4_Poker_Engine.Services
 
             List<Player> winners = _rules.DetermineWinner(_players.Where(player => player.Active).ToList());
             await _hubContext.Clients.All.SendAsync("ShowWinners", winners);
+        }
+
+        private void PayBlinds()
+        {
+            for (int i = 0; i < _players.Count; i++)
+            {
+                if (_players[i].Role == Role.BIG_BLIND)
+                {
+                    _potManager.AddToPot(_potManager.Big_Blind);
+                    _players[i].Money -= _potManager.Big_Blind;
+                }
+                else if (_players[i].Role == Role.SMALL_BLIND)
+                {
+                    _potManager.AddToPot(_potManager.Small_Blind);
+                    _players[i].Money -= _potManager.Small_Blind;
+                }
+            }
         }
 
         /// <summary>
