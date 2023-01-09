@@ -47,18 +47,17 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = false,
         };
 
+        // Event to listen for JWT token on hub
         options.Events = new JwtBearerEvents
         {
             OnMessageReceived = context =>
             {
                 var accessToken = context.Request.Query["access_token"];
-
-                // If the request is for our hub...
                 var path = context.HttpContext.Request.Path;
                 if (!string.IsNullOrEmpty(accessToken) &&
                     (path.StartsWithSegments("/poker")))
                 {
-                    // Read the token out of the query string
+                    // Reads the token out of the query string
                     context.Token = accessToken;
                 }
                 return Task.CompletedTask;
@@ -95,6 +94,6 @@ app.UseAuthorization();
 app.MapControllers();
 
 // SignalR hubs mappings
-app.MapHub<BasePokerHub>("/poker");
+app.MapHub<BasePokerHub>("/texas");
 
 app.Run();
