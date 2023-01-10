@@ -11,7 +11,7 @@ namespace H4_Poker_Engine.Hubs
         public event Action<string, string, int, string>? PlayerMadeActionEvent;
 
         [Authorize]
-        public async Task PlayerConnected(string user, string message, string clientId)
+        public async Task PlayerConnected(string user, string clientId)
         {
             NewPlayerConnectedEvent?.Invoke(user, clientId);
         }
