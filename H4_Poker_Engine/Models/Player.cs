@@ -5,7 +5,7 @@
         NONE,
         BIG_BLIND,
         SMALL_BLIND,
-        //DEALER
+        DEALER
     };
 
     //TODO give player turkey coins

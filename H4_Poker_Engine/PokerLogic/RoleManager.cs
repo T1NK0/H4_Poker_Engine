@@ -6,56 +6,87 @@ namespace H4_Poker_Engine.PokerLogic
 {
     public class RoleManager
     {
-        private void MoveRole(List<Player> players, Role payingRole, int amountToPay)
+        public bool MoveRoles(List<Player> players, int smallBlind, int bigBlind)
         {
-            //loop through players until you find a suitable person for the role
-            int indexOffset = 0;
-            int currentRoleHolder = players.IndexOf(players.Find(p => p.Role == payingRole));
+            List<Player> activePlayers = GetActivePlayers(players);
 
-            if (currentRoleHolder == -1)
+            if (IsSuitableRoleHolder(activePlayers, Role.SMALL_BLIND, smallBlind))
             {
-                Role nextRole = Role.NONE;
-                switch (payingRole)
+                MoveSmallBlind(activePlayers, smallBlind);
+
+                if (IsSuitableRoleHolder(activePlayers, Role.BIG_BLIND, bigBlind))
                 {
-                    case Role.BIG_BLIND:
-                        nextRole = Role.SMALL_BLIND;
-                        break;
-                    case Role.SMALL_BLIND:
-                        nextRole = Role.BIG_BLIND;
-                        break;
+                    MoveBigBlind(activePlayers, bigBlind);
+                    return true;
                 }
-                int startingIndex = players.IndexOf(players.Find(p => p.Role == nextRole));
-                for (int i = 0; i < players.Count; i++)
-                {
-                    int index = (startingIndex + i) % players.Count;
-                    if (players[index].Money >= amountToPay && players[index].Active)
-                    {
-                        players[index].Role = nextRole;
-                    }
-                }
+                return false;
+            }
+            return false;
+        }
+
+        private List<Player> GetActivePlayers(List<Player> players)
+        {
+            return players.Where(p => p.Active).ToList();
+        }
+
+        private bool IsSuitableRoleHolder(List<Player> players, Role roleToCheck, int amountToPay)
+        {
+            if (players.Any(p => p.Money >= amountToPay && p.Role != roleToCheck))
+            {
+                return true;
             }
 
-            for (int i = 1; i < players.Count; i++)
-            {
-                indexOffset = (currentRoleHolder + i) % players.Count;
+            return false;
+        }
 
-                if (players[indexOffset].Money >= amountToPay && players[indexOffset].Active)
+        private void MoveSmallBlind(List<Player> players, int amountToPay)
+        {
+            int currentRoleIndex = players.IndexOf(players.Find(p => p.Role == Role.SMALL_BLIND));
+
+            for (int i = 0; i < players.Count; i++)
+            {
+                int index = (i + currentRoleIndex) % players.Count;
+                if (players[index].Money >= amountToPay && players[index].Role != Role.SMALL_BLIND)
                 {
-                    players[indexOffset].Role = payingRole;
-                    players[currentRoleHolder].Role = Role.NONE;
+                    //Set holder perhaps
+                    players[index].Role = Role.SMALL_BLIND;
+                    players[currentRoleIndex].Role = Role.NONE;
                     i = players.Count;
-                }
-                else
-                {
-                    players[indexOffset].Active = false;
                 }
             }
         }
 
-        public void MoveRoles(List<Player> players, int smallBlind, int bigBlind)
+        private void MoveBigBlind(List<Player> players, int amountToPay)
         {
-            MoveRole(players, Role.BIG_BLIND, bigBlind);
-            MoveRole(players, Role.SMALL_BLIND, smallBlind);
+            int currentRoleIndex = players.IndexOf(players.Find(p => p.Role == Role.BIG_BLIND));
+
+            if (currentRoleIndex == -1)
+            {
+                int smallBlindIndex = players.IndexOf(players.Find(p => p.Role == Role.SMALL_BLIND));
+                for (int i = 0; i < players.Count; i++)
+                {
+                    int index = (i + smallBlindIndex) % players.Count;
+                    if (players[index].Role != Role.SMALL_BLIND && players[index].Money >= amountToPay)
+                    {
+                        players[index].Role = Role.BIG_BLIND;
+                        i = players.Count;
+                    }
+                }
+
+            }
+            else
+            {
+                for (int i = 0; i < players.Count; i++)
+                {
+                    int index = (i + currentRoleIndex) % players.Count;
+                    if (players[index].Role != Role.BIG_BLIND && players[index].Money >= amountToPay)
+                    {
+                        players[index].Role = Role.BIG_BLIND;
+                        players[currentRoleIndex].Role = Role.NONE;
+                        i = players.Count;
+                    }
+                }
+            }
         }
     }
 }
