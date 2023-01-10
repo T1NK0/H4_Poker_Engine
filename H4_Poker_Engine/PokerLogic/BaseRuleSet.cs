@@ -87,7 +87,7 @@ namespace H4_Poker_Engine.PokerLogic
         public int MinimumPlayers
         {
             get { return minimumPlayers; }
-            private set { minimumPlayers = value; }
+            protected set { minimumPlayers = value; }
         }
         public int MaximumPlayers
         {

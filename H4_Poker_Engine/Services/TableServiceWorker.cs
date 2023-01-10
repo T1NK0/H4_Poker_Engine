@@ -93,7 +93,7 @@ namespace H4_Poker_Engine.Services
             await _hubContext.Clients.Client(player.ClientId).SendAsync("UpdateMoney", player.Money);
         }
 
-        private async void AddNewPlayerToGame(string user, string message, string clientId)
+        private async void AddNewPlayerToGame(string user, string clientId)
         {
             var newPlayer = new Player() { Username = user, ClientId = clientId, Active = false, Money = 200 };
             _players.Add(newPlayer);
@@ -101,7 +101,7 @@ namespace H4_Poker_Engine.Services
             await _hubContext.Clients.All.SendAsync("SendMessage", newPlayer.Username);
         }
 
-        private async void RemovePlayerFromGame(string user, string message, string clientId)
+        private async void RemovePlayerFromGame(string user, string clientId)
         {
             var playerToRemove = _players.Find(player => player.ClientId == clientId);
             if (playerToRemove != null)
@@ -111,7 +111,7 @@ namespace H4_Poker_Engine.Services
                 await _hubContext.Clients.All.SendAsync("SendMessage", $"{playerToRemove.Username} has left");
             }
         }
-        private async void PlayerIsReadyToPlay(string user, string message, string clientId)
+        private async void PlayerIsReadyToPlay(string user, string clientId)
         {
             var playerToBeReady = _players.Find(player => player.ClientId == clientId);
             if (playerToBeReady != null)
