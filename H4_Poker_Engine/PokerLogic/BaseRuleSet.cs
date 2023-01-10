@@ -16,7 +16,8 @@ namespace H4_Poker_Engine.PokerLogic
         }
         #endregion
 
-        public abstract void AssignRoles(List<Player> players);
+        //TODO talk about what to do with this.
+        //public abstract void AssignRoles(List<Player> players);
         public virtual void DealCards(List<Player> playersToDeal, List<Card> deck, int amountToDeal)
         {
             for (int i = 0; i < playersToDeal.Count; i++)

@@ -6,7 +6,7 @@ namespace H4_Poker_Engine.PokerLogic
     {
         private int _totalPotAmount;
 
-        private int _currentRoundAmount;
+        private int _currentCallAmount;
         private int big_blind = 10;
 
         private int small_blind = 5;
@@ -17,18 +17,16 @@ namespace H4_Poker_Engine.PokerLogic
             set { small_blind = value; }
         }
 
-
         public int Big_Blind
         {
             get { return big_blind; }
             set { big_blind = value; }
         }
 
-
-        public int CurrentRoundAmount
+        public int CurrentCallAmount
         {
-            get { return _currentRoundAmount; }
-            set { _currentRoundAmount = value; }
+            get { return _currentCallAmount; }
+            set { _currentCallAmount = value; }
         }
 
         public int TotalPotAmount
@@ -42,11 +40,19 @@ namespace H4_Poker_Engine.PokerLogic
         /// </summary>
         /// <param name="potToAdd"></param>
         /// <param name="playerToTakeFrom"></param>
-        public void AddToPot(int potToAdd, Player playerToTakeFrom)
+        public void CallPot(Player playerToTakeFrom)
         {
-            playerToTakeFrom.Money -= potToAdd;
-            playerToTakeFrom.CurrentBetInRound += potToAdd;
-            TotalPotAmount += potToAdd;
+            int callAmount =  CurrentCallAmount - playerToTakeFrom.CurrentBetInRound;
+            playerToTakeFrom.Money -= callAmount;
+            TotalPotAmount += callAmount;
+        }
+
+        public void RaisePot(int amountToRaise, Player playerToTakeFrom)
+        {
+            playerToTakeFrom.Money -= amountToRaise;
+            playerToTakeFrom.CurrentBetInRound += amountToRaise;
+            CurrentCallAmount = playerToTakeFrom.CurrentBetInRound;
+            TotalPotAmount += amountToRaise;
         }
 
         /// <summary>

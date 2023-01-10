@@ -56,24 +56,24 @@ namespace H4_Poker_Engine.Services
             hub.PlayerMadeActionEvent += PlayerMadeActionAsync;
         }
 
-        private async void PlayerMadeActionAsync(string user, string action, int amount, string clientId)
+        private async void PlayerMadeActionAsync(string user, string action, int raiseAmount, string clientId)
         {
             Player player = _players.Where(p => p.ClientId == clientId).First();
 
             switch (action)
             {
                 case "call":
-                    _potManager.AddToPot(amount, player);
+                    _potManager.CallPot(player);
                     await _hubContext.Clients.All
-                        .SendAsync("SendMessage", $"{player.Username} has called and added {amount} to the pot");
+                        .SendAsync("SendMessage", $"{player.Username} has called and added {raiseAmount} to the pot");
                     UpdatePotAsync();
                     UpdatePlayerAmountAsync(player);
                     break;
                 case "raise":
                     _hasRaised = true;
-                    _potManager.AddToPot(amount, player);
+                    _potManager.RaisePot(raiseAmount, player);
                     await _hubContext.Clients.All
-                        .SendAsync("SendMessage", $"{player.Username} has raised the pot with {amount} turkey coins!");
+                        .SendAsync("SendMessage", $"{player.Username} has raised the pot with {raiseAmount} turkey coins!");
                     UpdatePotAsync();
                     UpdatePlayerAmountAsync(player);
                     break;
@@ -169,6 +169,7 @@ namespace H4_Poker_Engine.Services
             SetTurnOrder();
 
             //TODO Set players inactive(done) if they have no cash and notify them
+            //TODO Set set- and payblinds into ruleset probably
             await PayBlindsAsync();
 
 
@@ -225,16 +226,17 @@ namespace H4_Poker_Engine.Services
         {
             for (int i = 0; i < _players.Count; i++)
             {
-                if (_players[i].Role == Role.BIG_BLIND)
+                if (_players[i].Role == Role.SMALL_BLIND)
                 {
-                    _potManager.AddToPot(_potManager.Big_Blind, _players[i]);
-                    await _hubContext.Clients.All.SendAsync("SendMessage", $"{_players[i].Username} has paid {_potManager.Big_Blind} as big blind");
-                }
-
-                else if (_players[i].Role == Role.SMALL_BLIND)
-                {
-                    _potManager.AddToPot(_potManager.Small_Blind, _players[i]);
+                    _potManager.CurrentCallAmount = _potManager.Small_Blind;
+                    _potManager.CallPot(_players[i]);
                     await _hubContext.Clients.All.SendAsync("SendMessage", $"{_players[i].Username} has paid {_potManager.Big_Blind} as small blind");
+                }
+                else if (_players[i].Role == Role.BIG_BLIND)
+                {
+                    _potManager.CurrentCallAmount = _potManager.Big_Blind;
+                    _potManager.CallPot(_players[i]);
+                    await _hubContext.Clients.All.SendAsync("SendMessage", $"{_players[i].Username} has paid {_potManager.Big_Blind} as big blind");
                 }
             }
         }
@@ -273,7 +275,6 @@ namespace H4_Poker_Engine.Services
             {
                 if (_players[i].Active)
                 {
-                    //action name, bool
                     Player currentUser = _players[i];
                     _playerThinking = true;
                     await _hubContext.Clients.Client(currentUser.ClientId)

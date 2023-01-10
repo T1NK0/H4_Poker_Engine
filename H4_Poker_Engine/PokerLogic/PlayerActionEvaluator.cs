@@ -10,7 +10,7 @@ namespace H4_Poker_Engine.PokerLogic
             {
                 { "call", CanCall(player, potManager, hasRaised) },
                 { "raise", CanRaise(player, potManager) },
-                { "check", CanCheck(player, hasRaised) },
+                { "check", CanCheck(player, potManager, hasRaised) },
                 { "Fold", true }
             };
 
@@ -19,15 +19,36 @@ namespace H4_Poker_Engine.PokerLogic
 
         private bool CanCall(Player player, PotManager potManager, bool hasRaised)
         {
-            return true;
+            if (player.CurrentBetInRound < potManager.Big_Blind)
+            {
+                return true;
+            }
+            else if (hasRaised && (player.CurrentBetInRound + player.Money) >= potManager.CurrentCallAmount)
+            {
+                return true;
+            }
+            //TODO do something about "all in"
+            else if (true)
+            {
+
+            }
+            return false;
         }
         private bool CanRaise(Player player, PotManager potManager)
         {
-            return true;
+            if (potManager.CurrentCallAmount < player.Money)
+            {
+                return true;
+            }
+            return false;
         }
-        private bool CanCheck(Player player, bool hasRaised)
+        private bool CanCheck(Player player, PotManager potManager, bool hasRaised)
         {
-            return true;
+            if (!hasRaised && player.CurrentBetInRound == potManager.CurrentCallAmount)
+            {
+                return true;
+            }
+            return false;
         }
 
     }
