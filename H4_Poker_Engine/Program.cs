@@ -1,5 +1,8 @@
 using H4_Poker_Engine.Authentication;
+using H4_Poker_Engine.Factories;
 using H4_Poker_Engine.Hubs;
+using H4_Poker_Engine.Interfaces;
+using H4_Poker_Engine.PokerLogic;
 using H4_Poker_Engine.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -55,7 +58,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 var accessToken = context.Request.Query["access_token"];
                 var path = context.HttpContext.Request.Path;
                 if (!string.IsNullOrEmpty(accessToken) &&
-                    (path.StartsWithSegments("/poker")))
+                    (path.StartsWithSegments("/texas")))
                 {
                     // Reads the token out of the query string
                     context.Token = accessToken;
@@ -70,6 +73,9 @@ builder.Services.AddHostedService<TableServiceWorker>();
 
 // DependencyInjection
 builder.Services.AddScoped<TokenGenerator>();
+builder.Services.AddScoped<IDeckFactory, DeckFactory>();
+builder.Services.AddScoped<IHandEvaluator, HandEvaluator>();
+builder.Services.AddScoped<BaseRuleSet>();
 builder.Services.AddSingleton<BasePokerHub>();
 
 
