@@ -20,9 +20,20 @@
 
         private List<Card> _cardHand;
 
+        public Player(string username, string clientId)
+        {
+            _username = username;
+            _clientId = clientId;
+            _active = false;
+            _money = 200;
+            _currentBetInRound = 0;
+            _cardHand = new List<Card>();
+        }
+
+        //For tests
         public Player()
         {
-            _cardHand = new List<Card>();
+
         }
 
         public string Username
