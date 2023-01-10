@@ -12,6 +12,29 @@ namespace H4_Poker_Engine.PokerLogic
             int indexOffset = 0;
             int currentRoleHolder = players.IndexOf(players.Find(p => p.Role == payingRole));
 
+            if (currentRoleHolder == -1)
+            {
+                Role nextRole = Role.NONE;
+                switch (payingRole)
+                {
+                    case Role.BIG_BLIND:
+                        nextRole = Role.SMALL_BLIND;
+                        break;
+                    case Role.SMALL_BLIND:
+                        nextRole = Role.BIG_BLIND;
+                        break;
+                }
+                int startingIndex = players.IndexOf(players.Find(p => p.Role == nextRole));
+                for (int i = 0; i < players.Count; i++)
+                {
+                    int index = (startingIndex + i) % players.Count;
+                    if (players[index].Money >= amountToPay && players[index].Active)
+                    {
+                        players[index].Role = nextRole;
+                    }
+                }
+            }
+
             for (int i = 1; i < players.Count; i++)
             {
                 indexOffset = (currentRoleHolder + i) % players.Count;
