@@ -73,9 +73,9 @@ builder.Services.AddHostedService<TableServiceWorker>();
 
 // DependencyInjection
 builder.Services.AddScoped<TokenGenerator>();
-builder.Services.AddScoped<IDeckFactory, DeckFactory>();
-builder.Services.AddScoped<IHandEvaluator, HandEvaluator>();
-builder.Services.AddScoped<BaseRuleSet>();
+builder.Services.AddTransient<IDeckFactory, DeckFactory>();
+builder.Services.AddTransient<IHandEvaluator, HandEvaluator>();
+builder.Services.AddTransient<BaseRuleSet, TexasHoldEmRules>();
 builder.Services.AddSingleton<BasePokerHub>();
 
 
