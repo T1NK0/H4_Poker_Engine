@@ -1,5 +1,8 @@
 using H4_Poker_Engine.Authentication;
+using H4_Poker_Engine.Factories;
 using H4_Poker_Engine.Hubs;
+using H4_Poker_Engine.Interfaces;
+using H4_Poker_Engine.PokerLogic;
 using H4_Poker_Engine.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -47,18 +50,17 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = false,
         };
 
+        // Event to listen for JWT token on hub
         options.Events = new JwtBearerEvents
         {
             OnMessageReceived = context =>
             {
                 var accessToken = context.Request.Query["access_token"];
-
-                // If the request is for our hub...
                 var path = context.HttpContext.Request.Path;
                 if (!string.IsNullOrEmpty(accessToken) &&
-                    (path.StartsWithSegments("/poker")))
+                    (path.StartsWithSegments("/texas")))
                 {
-                    // Read the token out of the query string
+                    // Reads the token out of the query string
                     context.Token = accessToken;
                 }
                 return Task.CompletedTask;
@@ -71,6 +73,9 @@ builder.Services.AddHostedService<TableServiceWorker>();
 
 // DependencyInjection
 builder.Services.AddScoped<TokenGenerator>();
+builder.Services.AddTransient<IDeckFactory, DeckFactory>();
+builder.Services.AddTransient<IHandEvaluator, HandEvaluator>();
+builder.Services.AddTransient<BaseRuleSet, TexasHoldEmRules>();
 builder.Services.AddSingleton<BasePokerHub>();
 
 
@@ -95,6 +100,6 @@ app.UseAuthorization();
 app.MapControllers();
 
 // SignalR hubs mappings
-app.MapHub<BasePokerHub>("/poker");
+app.MapHub<BasePokerHub>("/texas");
 
 app.Run();
