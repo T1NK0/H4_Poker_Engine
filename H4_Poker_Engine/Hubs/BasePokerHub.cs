@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace H4_Poker_Engine.Hubs
 {
-    public class BasePokerHub : Hub
+    public class BasePokerHub : Hub, IBasePokerHub
     {
         public event Action<string, string>? NewPlayerConnectedEvent;
         public event Action<string, string>? PlayerHasDisconnectedEvent;
