@@ -225,12 +225,16 @@ namespace H4_Poker_Engine.Services
             if (roundNumber == 1)
             {
                 Card tableFirstCard = _deck.FirstOrDefault();
+                CardModel tableFirstCardModel = new CardModel(tableFirstCard);
                 _deck.Remove(tableFirstCard);
                 Card tableSecondCard = _deck.FirstOrDefault();
+                CardModel tableSecondCardModel = new CardModel(tableSecondCard);
                 _deck.Remove(tableSecondCard);
                 Card tableThirdCard = _deck.FirstOrDefault();
+                CardModel tableThirdCardModel = new CardModel(tableThirdCard);
                 _deck.Remove(tableThirdCard);
-                await _hubContext.Clients.All.SendAsync("GetFlop", tableFirstCard, tableSecondCard, tableThirdCard);
+
+                await _hubContext.Clients.All.SendAsync("GetFlop", tableFirstCardModel, tableSecondCardModel, tableThirdCardModel);
             }
             else if (roundNumber == 2)
             {
