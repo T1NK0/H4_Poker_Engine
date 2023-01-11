@@ -161,8 +161,10 @@ namespace H4_Poker_Engine.Services
             _rules.DealCards(_players, _deck, 2);
             foreach (Player player in _players)
             {
+                CardModel first = new CardModel(player.CardHand[0]);
+                CardModel second = new CardModel(player.CardHand[1]);
                 await _hubContext.Clients.Client(player.ClientId)
-                    .SendAsync("GetPlayerCards", player.CardHand[0], player.CardHand[1]);
+                    .SendAsync("GetPlayerCards", first, second);
             }
 
             for (int i = 0; i < 5; i++)
