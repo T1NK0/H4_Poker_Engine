@@ -69,9 +69,9 @@ namespace H4_Poker_Engine.Services
                 switch (action)
                 {
                     case "call":
-                        _potManager.CallPot(player);
+                        int callAmount = _potManager.CallPot(player);
                         await _hub.Clients.All
-                            .SendAsync("SendMessage", $"{player.Username} has called and added {raiseAmount} to the pot");
+                            .SendAsync("SendMessage", $"{player.Username} has called and added {callAmount} to the pot");
                         UpdatePotAsync();
                         UpdatePlayerAmountAsync(player);
                         break;
@@ -97,7 +97,7 @@ namespace H4_Poker_Engine.Services
                 SetCurrentPlayer(player);
             }
 
-            BettingRoundAsync(player);
+            BettingRoundAsync(_currentPlayer);
         }
 
         private async void UpdatePotAsync()
@@ -164,10 +164,10 @@ namespace H4_Poker_Engine.Services
                 BeginGameAsync();
                 //Game is over and all players need to press ready again for a new round to begin
                 _isGameRunning = false;
-                foreach (Player player in _players)
-                {
-                    player.Active = false;
-                }
+                //foreach (Player player in _players)
+                //{
+                //    player.Active = false;
+                //}
             }
         }
 
@@ -311,6 +311,7 @@ namespace H4_Poker_Engine.Services
             //}
             //}
         }
+
         Player _currentPlayer;
         int roundCounter = 0;
         private async void SetCurrentPlayer(Player previousPlayer)
@@ -329,6 +330,7 @@ namespace H4_Poker_Engine.Services
             }
             else if (indexOfPrevious + 1 == _players.Count && _hasRaised)
             {
+                _hasRaised = false;
                 _currentPlayer = _players.Where(p => p.Active).First();
             }
             else if (indexOfPrevious + 1 == _players.Count && !_hasRaised)
