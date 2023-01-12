@@ -40,11 +40,12 @@ namespace H4_Poker_Engine.PokerLogic
         /// </summary>
         /// <param name="potToAdd"></param>
         /// <param name="playerToTakeFrom"></param>
-        public void CallPot(Player playerToTakeFrom)
+        public int CallPot(Player playerToTakeFrom)
         {
             int callAmount =  CurrentCallAmount - playerToTakeFrom.CurrentBetInRound;
             playerToTakeFrom.Money -= callAmount;
             TotalPotAmount += callAmount;
+            return callAmount;
         }
 
         public void RaisePot(int amountToRaise, Player playerToTakeFrom)
