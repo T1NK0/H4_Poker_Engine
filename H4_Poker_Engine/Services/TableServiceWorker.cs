@@ -167,7 +167,12 @@ namespace H4_Poker_Engine.Services
                 SetBlinds();
 
 
-            _roleManager.MoveRoles(_players, _potManager.Small_Blind, _potManager.Big_Blind);
+            if (!_roleManager.MoveRoles(_players, _potManager.Small_Blind, _potManager.Big_Blind))
+            {
+                await _hubContext.Clients.All
+                    .SendAsync("SendMessage", "Something went wrong with Moving roles, there was no suitable blind holder(s)");
+                return;
+            } 
             SetTurnOrder();
 
             //TODO Set players inactive(done) if they have no cash and notify them
@@ -193,6 +198,10 @@ namespace H4_Poker_Engine.Services
                         BettingRoundAsync();
                     } while (_hasRaised);
                     DealCommunityCardsAsync(i);
+                    for (int j = 0; j < _players.Count; j++)
+                    {
+                        _players[i].CurrentBetInRound = 0;
+                    }
                 }
                 else
                     i = 5;
@@ -232,7 +241,7 @@ namespace H4_Poker_Engine.Services
                 {
                     _potManager.CurrentCallAmount = _potManager.Small_Blind;
                     _potManager.CallPot(_players[i]);
-                    await _hubContext.Clients.All.SendAsync("SendMessage", $"{_players[i].Username} has paid {_potManager.Big_Blind} as small blind");
+                    await _hubContext.Clients.All.SendAsync("SendMessage", $"{_players[i].Username} has paid {_potManager.Small_Blind} as small blind");
                 }
                 else if (_players[i].Role == Role.BIG_BLIND)
                 {

@@ -6,9 +6,9 @@ namespace H4_Poker_Engine.PokerLogic
     public abstract class BaseRuleSet
     {
         #region Fields
-        private int minimumPlayers;
-        private int maximumPlayers;
-        private IHandEvaluator _handEvaluator;
+        protected int minimumPlayers;
+        protected int maximumPlayers;
+        protected IHandEvaluator _handEvaluator;
 
         protected BaseRuleSet(IHandEvaluator evaluator)
         {
@@ -30,7 +30,6 @@ namespace H4_Poker_Engine.PokerLogic
                 }
             }
         }
-        //public abstract void BettingRound(List<Player> playersInRound);
 
         //override this and also take note of community cards, if playing texas hold em
         public virtual List<Player> DetermineWinner(List<Player> players)
