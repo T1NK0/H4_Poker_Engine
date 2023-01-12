@@ -57,6 +57,8 @@ namespace H4_Poker_Engine.Services
 
         private async void PlayerMadeActionAsync(string user, string action, int raiseAmount, string clientId)
         {
+            _playerThinking = false;
+
             Console.WriteLine("------- Enters: Player Made Action -------");
             //This method would be a good talking point, as it prob breaks the S in solid.
             Player player = _players.Where(p => p.ClientId == clientId).First();
@@ -88,7 +90,6 @@ namespace H4_Poker_Engine.Services
                         .SendAsync("SendMessage", $"{player.Username} checks");
                     break;
             }
-            _playerThinking = false;
         }
 
         private async void UpdatePotAsync()
@@ -305,7 +306,11 @@ namespace H4_Poker_Engine.Services
                     Console.WriteLine($"******* Userturn: {currentUser.Username} *******");
                     await _hub.Clients.Client(currentUser.ClientId)
                         .SendAsync("ActionReady", _playerActionManager.GetValidActions(currentUser, _potManager, _hasRaised));
-                    while (_playerThinking) ;
+                    while (_playerThinking) 
+                    {
+                        Console.WriteLine("------- Player thinking -------");
+                        Thread.Sleep(500);
+                    }
                 }
             }
         }
