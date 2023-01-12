@@ -58,6 +58,8 @@ namespace H4_Poker_Engine.Services
 
         private async void PlayerMadeActionAsync(string user, string action, int raiseAmount, string clientId)
         {
+            _playerThinking = false;
+
             Console.WriteLine("------- Enters: Player Made Action -------");
             //This method would be a good talking point, as it prob breaks the S in solid.
             Player player = _players.Where(p => p.ClientId == clientId).First();
