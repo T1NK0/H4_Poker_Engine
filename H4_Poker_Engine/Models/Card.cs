@@ -1,4 +1,6 @@
-﻿namespace H4_Poker_Engine.Models
+﻿using System.Text.Json.Serialization;
+
+namespace H4_Poker_Engine.Models
 {
     public enum Rank
     {
@@ -27,7 +29,10 @@
 
     public class Card
     {
+        [JsonConverter(typeof(JsonStringEnumConverter))]
         public Rank Rank { get; set; }
+
+        [JsonConverter(typeof(JsonStringEnumConverter))]
         public Suit Suit { get; set; }
 
         public Card(Rank rank, Suit suit)
