@@ -51,14 +51,15 @@ namespace H4_Poker_Engine.Services
 
 
             // Subscribe to event
-            _hub.NewPlayerConnectedEvent += AddNewPlayerToGame;
-            _hub.PlayerHasDisconnectedEvent += RemovePlayerFromGame;
-            _hub.PlayerIsReadyEvent += PlayerIsReadyToPlay;
+            _hub.NewPlayerConnectedEvent += AddNewPlayerToGameAsync;
+            _hub.PlayerHasDisconnectedEvent += RemovePlayerFromGameAsync;
+            _hub.PlayerIsReadyEvent += PlayerIsReadyToPlayAsync;
             _hub.PlayerMadeActionEvent += PlayerMadeActionAsync;
         }
 
         private async void PlayerMadeActionAsync(string user, string action, int raiseAmount, string clientId)
         {
+            //This method would be a good talking point, as it prob breaks the S in solid.
             Player player = _players.Where(p => p.ClientId == clientId).First();
 
             switch (action)
@@ -101,7 +102,7 @@ namespace H4_Poker_Engine.Services
             await _hub.Clients.Client(player.ClientId).SendAsync("UpdateMoney", player.Money);
         }
 
-        private async void AddNewPlayerToGame(string user, string clientId)
+        private async void AddNewPlayerToGameAsync(string user, string clientId)
         {
             var newPlayer = new Player(user, clientId);
             _players.Add(newPlayer);
@@ -109,7 +110,7 @@ namespace H4_Poker_Engine.Services
             await _hub.Clients.All.SendAsync("SendMessage", newPlayer.Username);
         }
 
-        private async void RemovePlayerFromGame(string user, string clientId)
+        private async void RemovePlayerFromGameAsync(string user, string clientId)
         {
             var playerToRemove = _players.Find(player => player.ClientId == clientId);
             if (playerToRemove != null)
@@ -119,7 +120,7 @@ namespace H4_Poker_Engine.Services
                 await _hub.Clients.All.SendAsync("SendMessage", $"{playerToRemove.Username} has left");
             }
         }
-        private async void PlayerIsReadyToPlay(string user, string clientId)
+        private async void PlayerIsReadyToPlayAsync(string user, string clientId)
         {
             var playerToBeReady = _players.Find(player => player.ClientId == clientId);
             if (playerToBeReady != null)
@@ -232,7 +233,7 @@ namespace H4_Poker_Engine.Services
         /// <summary>
         /// Force players with the <see cref="Role.BIG_BLIND"/> and <seealso cref="Role.SMALL_BLIND"/> to pay their blinds
         /// </summary>
-        private async Task PayBlindsAsync()
+        private async void PayBlindsAsync()
         {
             for (int i = 0; i < _players.Count; i++)
             {

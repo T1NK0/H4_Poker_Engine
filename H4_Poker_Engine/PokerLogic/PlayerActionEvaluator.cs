@@ -11,7 +11,7 @@ namespace H4_Poker_Engine.PokerLogic
                 { "call", CanCall(player, potManager, hasRaised) },
                 { "raise", CanRaise(player, potManager) },
                 { "check", CanCheck(player, potManager, hasRaised) },
-                { "Fold", true }
+                { "fold", true }
             };
 
             return validActions;
