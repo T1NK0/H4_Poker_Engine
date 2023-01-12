@@ -177,7 +177,7 @@ namespace H4_Poker_Engine.Services
 
             //TODO Set players inactive(done) if they have no cash and notify them
             //TODO Set set- and payblinds into ruleset probably
-            await PayBlindsAsync();
+            PayBlindsAsync();
 
 
             _rules.DealCards(_players, _deck, 2);
