@@ -5,6 +5,8 @@ using H4_Poker_Engine.PokerLogic;
 using Microsoft.AspNetCore.SignalR;
 using System.Numerics;
 using System.Security.Cryptography;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace H4_Poker_Engine.Services
 {
@@ -165,7 +167,12 @@ namespace H4_Poker_Engine.Services
                 SetBlinds();
 
 
-            _roleManager.MoveRoles(_players, _potManager.Small_Blind, _potManager.Big_Blind);
+            if (!_roleManager.MoveRoles(_players, _potManager.Small_Blind, _potManager.Big_Blind))
+            {
+                await _hubContext.Clients.All
+                    .SendAsync("SendMessage", "Something went wrong with Moving roles, there was no suitable blind holder(s)");
+                return;
+            } 
             SetTurnOrder();
 
             //TODO Set players inactive(done) if they have no cash and notify them
@@ -177,7 +184,7 @@ namespace H4_Poker_Engine.Services
             foreach (Player player in _players)
             {
                 await _hubContext.Clients.Client(player.ClientId)
-                    .SendAsync("GetPlayerCards", player.CardHand[0], player.CardHand[1]);
+                    .SendAsync("GetPlayerCards", JsonSerializer.Serialize(player.CardHand[0]), JsonSerializer.Serialize(player.CardHand[1]));
             }
 
             for (int i = 0; i < 5; i++)
@@ -191,6 +198,10 @@ namespace H4_Poker_Engine.Services
                         BettingRoundAsync();
                     } while (_hasRaised);
                     DealCommunityCardsAsync(i);
+                    for (int j = 0; j < _players.Count; j++)
+                    {
+                        _players[i].CurrentBetInRound = 0;
+                    }
                 }
                 else
                     i = 5;
@@ -230,7 +241,7 @@ namespace H4_Poker_Engine.Services
                 {
                     _potManager.CurrentCallAmount = _potManager.Small_Blind;
                     _potManager.CallPot(_players[i]);
-                    await _hubContext.Clients.All.SendAsync("SendMessage", $"{_players[i].Username} has paid {_potManager.Big_Blind} as small blind");
+                    await _hubContext.Clients.All.SendAsync("SendMessage", $"{_players[i].Username} has paid {_potManager.Small_Blind} as small blind");
                 }
                 else if (_players[i].Role == Role.BIG_BLIND)
                 {
@@ -255,7 +266,11 @@ namespace H4_Poker_Engine.Services
                 _deck.Remove(tableSecondCard);
                 Card tableThirdCard = _deck.FirstOrDefault();
                 _deck.Remove(tableThirdCard);
-                await _hubContext.Clients.All.SendAsync("GetFlop", tableFirstCard, tableSecondCard, tableThirdCard);
+                await _hubContext.Clients.All
+                    .SendAsync("GetFlop", 
+                    JsonSerializer.Serialize(tableFirstCard), 
+                    JsonSerializer.Serialize(tableSecondCard), 
+                    JsonSerializer.Serialize(tableThirdCard));
             }
             else if (roundNumber == 2)
             {
