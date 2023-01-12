@@ -21,6 +21,7 @@ namespace H4_Poker_Engine.PokerLogic
         
         public virtual void DealCards(List<Player> playersToDeal, List<Card> deck, int amountToDeal)
         {
+            Console.WriteLine("------- Enters: Deal User Cards -------");
             for (int i = 0; i < playersToDeal.Count; i++)
             {
                 for (int j = 0; j < amountToDeal; j++)

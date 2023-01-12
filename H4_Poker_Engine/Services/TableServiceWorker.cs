@@ -3,8 +3,6 @@ using H4_Poker_Engine.Interfaces;
 using H4_Poker_Engine.Models;
 using H4_Poker_Engine.PokerLogic;
 using Microsoft.AspNetCore.SignalR;
-using System.Numerics;
-using System.Security.Cryptography;
 
 namespace H4_Poker_Engine.Services
 {
@@ -59,6 +57,7 @@ namespace H4_Poker_Engine.Services
 
         private async void PlayerMadeActionAsync(string user, string action, int raiseAmount, string clientId)
         {
+            Console.WriteLine("------- Enters: Player Made Action -------");
             //This method would be a good talking point, as it prob breaks the S in solid.
             Player player = _players.Where(p => p.ClientId == clientId).First();
 
@@ -94,16 +93,19 @@ namespace H4_Poker_Engine.Services
 
         private async void UpdatePotAsync()
         {
+            Console.WriteLine("------- Enters: Update Pot -------");
             await _hub.Clients.All.SendAsync("UpdatePot", _potManager.TotalPotAmount);
         }
 
         private async void UpdatePlayerAmountAsync(Player player)
         {
+            Console.WriteLine("------- Enters: Update Player Amount -------");
             await _hub.Clients.Client(player.ClientId).SendAsync("UpdateMoney", player.Money);
         }
 
         private async void AddNewPlayerToGameAsync(string user, string clientId)
         {
+            Console.WriteLine("------- Enters: Add New Player To Game -------");
             var newPlayer = new Player(user, clientId);
             _players.Add(newPlayer);
             Console.WriteLine($"New player added, total number of users: {_players.Count()}");
@@ -112,6 +114,7 @@ namespace H4_Poker_Engine.Services
 
         private async void RemovePlayerFromGameAsync(string user, string clientId)
         {
+            Console.WriteLine("------- Enters: Remove player from game -------");
             var playerToRemove = _players.Find(player => player.ClientId == clientId);
             if (playerToRemove != null)
             {
@@ -122,6 +125,7 @@ namespace H4_Poker_Engine.Services
         }
         private async void PlayerIsReadyToPlayAsync(string user, string clientId)
         {
+            Console.WriteLine("------- Enters: Player is ready to play -------");
             var playerToBeReady = _players.Find(player => player.ClientId == clientId);
             if (playerToBeReady != null)
             {
@@ -134,6 +138,7 @@ namespace H4_Poker_Engine.Services
 
         private void CheckIfGameCanBegin()
         {
+            Console.WriteLine("------- Enters: Check If Game Can Begin -------");
             var numberOfPlayersReady = 0;
             foreach (var player in _players)
             {
@@ -159,6 +164,7 @@ namespace H4_Poker_Engine.Services
 
         private async void BeginGameAsync()
         {
+            Console.WriteLine("------- Enters: Begin Game -------");
             _deck = _deckFactory.GetNewDeck();
             _potManager.TotalPotAmount = 0;
 
@@ -220,6 +226,7 @@ namespace H4_Poker_Engine.Services
 
         private void SetBlinds()
         {
+            Console.WriteLine("------- Enters: Set Blinds -------");
             //Set blinds randomly at start of game
             int smallBlindIndex = new Random().Next(0, _players.Count);
             _players[smallBlindIndex].Role = Role.SMALL_BLIND;
@@ -235,6 +242,7 @@ namespace H4_Poker_Engine.Services
         /// </summary>
         private async void PayBlindsAsync()
         {
+            Console.WriteLine("------- Enters: Pay Blinds -------");
             for (int i = 0; i < _players.Count; i++)
             {
                 if (_players[i].Role == Role.SMALL_BLIND)
@@ -258,6 +266,7 @@ namespace H4_Poker_Engine.Services
         /// <param name="roundNumber"></param>
         private async void DealCommunityCardsAsync(int roundNumber)
         {
+            Console.WriteLine("------- Enters: Deal Community Cards -------");
             if (roundNumber == 1)
             {
                 Card tableFirstCard = _deck.FirstOrDefault();
@@ -286,12 +295,14 @@ namespace H4_Poker_Engine.Services
 
         private async void BettingRoundAsync()
         {
+            Console.WriteLine("------- Enters: Betting Round -------");
             for (int i = 0; i < _players.Count; i++)
             {
                 if (_players[i].Active)
                 {
                     Player currentUser = _players[i];
                     _playerThinking = true;
+                    Console.WriteLine($"******* Userturn: {currentUser.Username} *******");
                     await _hub.Clients.Client(currentUser.ClientId)
                         .SendAsync("ActionReady", _playerActionManager.GetValidActions(currentUser, _potManager, _hasRaised));
                     while (_playerThinking) ;
@@ -301,6 +312,7 @@ namespace H4_Poker_Engine.Services
 
         private void SetTurnOrder()
         {
+            Console.WriteLine("------- Enters: Set Turn Order -------");
             //Swap the order of the 2 players
             if (_players.Count == 2)
             {
@@ -331,6 +343,7 @@ namespace H4_Poker_Engine.Services
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            Console.WriteLine("------- Enters: Execute -------");
             // TODO: some logic here!?
         }
     }
