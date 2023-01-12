@@ -7,6 +7,8 @@ namespace H4_Poker_Engine.PokerLogic
     {
         public TexasHoldEmRules(IHandEvaluator evaluator) : base(evaluator)
         {
+            this.MinimumPlayers = 2;
+            this.MaximumPlayers = 9;
         }
     }
 }

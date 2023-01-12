@@ -12,7 +12,7 @@ namespace H4_Poker_Engine.Services
 {
     public class TableServiceWorker : BackgroundService
     {
-        private readonly IHubContext<BasePokerHub> _hubContext;
+        private readonly BasePokerHub _hub;
         private IDeckFactory _deckFactory;
         private List<Player> _players;
         private List<Card> _deck;
@@ -24,10 +24,11 @@ namespace H4_Poker_Engine.Services
         private bool _hasRaised = false;
         private bool _playerThinking = false;
 
-        public TableServiceWorker(IHubContext<BasePokerHub> hubContext, BasePokerHub hub,
+        public TableServiceWorker(BasePokerHub hub,
             BaseRuleSet ruleSet, IDeckFactory deckFactory)
         {
-            _hubContext = hubContext;
+            //_hub = hubContext;
+            _hub = hub;
             _rules = ruleSet;
             _deckFactory = deckFactory;
 
@@ -52,10 +53,10 @@ namespace H4_Poker_Engine.Services
 
 
             // Subscribe to event
-            hub.NewPlayerConnectedEvent += AddNewPlayerToGameAsync;
-            hub.PlayerHasDisconnectedEvent += RemovePlayerFromGameAsync;
-            hub.PlayerIsReadyEvent += PlayerIsReadyToPlayAsync;
-            hub.PlayerMadeActionEvent += PlayerMadeActionAsync;
+            _hub.NewPlayerConnectedEvent += AddNewPlayerToGame;
+            _hub.PlayerHasDisconnectedEvent += RemovePlayerFromGame;
+            _hub.PlayerIsReadyEvent += PlayerIsReadyToPlay;
+            _hub.PlayerMadeActionEvent += PlayerMadeAction;
         }
 
         private async void PlayerMadeActionAsync(string user, string action, int raiseAmount, string clientId)
@@ -81,11 +82,11 @@ namespace H4_Poker_Engine.Services
                     break;
                 case "fold":
                     player.Active = false;
-                    await _hubContext.Clients.All
+                    await _hub.Clients.All
                         .SendAsync("SendMessage", $"{player.Username} has folded");
                     break;
                 case "check":
-                    await _hubContext.Clients.All
+                    await _hub.Clients.All
                         .SendAsync("SendMessage", $"{player.Username} checks");
                     break;
             }
@@ -94,40 +95,40 @@ namespace H4_Poker_Engine.Services
 
         private async void UpdatePotAsync()
         {
-            await _hubContext.Clients.All.SendAsync("UpdatePot", _potManager.TotalPotAmount);
+            await _hub.Clients.All.SendAsync("UpdatePot", _potManager.TotalPotAmount);
         }
 
         private async void UpdatePlayerAmountAsync(Player player)
         {
-            await _hubContext.Clients.Client(player.ClientId).SendAsync("UpdateMoney", player.Money);
+            await _hub.Clients.Client(player.ClientId).SendAsync("UpdateMoney", player.Money);
         }
 
-        private async void AddNewPlayerToGameAsync(string user, string message, string clientId)
+        private async void AddNewPlayerToGame(string user, string clientId)
         {
             var newPlayer = new Player(user, clientId);
             _players.Add(newPlayer);
             Console.WriteLine($"New player added, total number of users: {_players.Count()}");
-            await _hubContext.Clients.All.SendAsync("SendMessage", newPlayer.Username);
+            await _hub.Clients.All.SendAsync("SendMessage", newPlayer.Username);
         }
 
-        private async void RemovePlayerFromGameAsync(string user, string message, string clientId)
+        private async void RemovePlayerFromGame(string user, string clientId)
         {
             var playerToRemove = _players.Find(player => player.ClientId == clientId);
             if (playerToRemove != null)
             {
                 _players.Remove(playerToRemove);
                 Console.WriteLine($"Player {user} removed from game, total number of players: {_players.Count()}");
-                await _hubContext.Clients.All.SendAsync("SendMessage", $"{playerToRemove.Username} has left");
+                await _hub.Clients.All.SendAsync("SendMessage", $"{playerToRemove.Username} has left");
             }
         }
-        private async void PlayerIsReadyToPlayAsync(string user, string message, string clientId)
+        private async void PlayerIsReadyToPlay(string user, string clientId)
         {
             var playerToBeReady = _players.Find(player => player.ClientId == clientId);
             if (playerToBeReady != null)
             {
                 playerToBeReady.Active = true;
                 Console.WriteLine($"Player {user} is ready to play, status is set to {playerToBeReady.Active}");
-                await _hubContext.Clients.All.SendAsync("SendMessage", $"{playerToBeReady.Username} is ready!");
+                await _hub.Clients.All.SendAsync("SendMessage", $"{playerToBeReady.Username} is ready!");
             }
             CheckIfGameCanBegin();
         }
@@ -209,11 +210,11 @@ namespace H4_Poker_Engine.Services
             //Do showdown
             if (_players.Count(player => player.Active) > 1)
             {
-                await _hubContext.Clients.All.SendAsync("Showdown", _players.Where(p => p.Active).ToList());
+                await _hub.Clients.All.SendAsync("Showdown", _players.Where(p => p.Active).ToList());
             }
 
             List<Player> winners = _rules.DetermineWinner(_players.Where(player => player.Active).ToList());
-            await _hubContext.Clients.All.SendAsync("ShowWinners", winners);
+            await _hub.Clients.All.SendAsync("ShowWinners", winners);
             _potManager.PayOutPotToWinners(winners);
             winners.ForEach(player => UpdatePlayerAmountAsync(player));
         }
@@ -274,12 +275,12 @@ namespace H4_Poker_Engine.Services
             }
             else if (roundNumber == 2)
             {
-                await _hubContext.Clients.All.SendAsync("GetTurn", _deck.First());
+                await _hub.Clients.All.SendAsync("GetTurn", _deck.First());
                 _deck.RemoveAt(0);
             }
             else if (roundNumber == 3)
             {
-                await _hubContext.Clients.All.SendAsync("GetRiver", _deck.First());
+                await _hub.Clients.All.SendAsync("GetRiver", _deck.First());
                 _deck.RemoveAt(0);
             }
         }
