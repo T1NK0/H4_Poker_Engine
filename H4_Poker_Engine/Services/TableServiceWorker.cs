@@ -5,8 +5,6 @@ using H4_Poker_Engine.PokerLogic;
 using Microsoft.AspNetCore.SignalR;
 using System.Numerics;
 using System.Security.Cryptography;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace H4_Poker_Engine.Services
 {
@@ -173,7 +171,7 @@ namespace H4_Poker_Engine.Services
                 await _hub.Clients.All
                     .SendAsync("SendMessage", "Something went wrong with Moving roles, there was no suitable blind holder(s)");
                 return;
-            } 
+            }
             SetTurnOrder();
 
             //TODO Set players inactive(done) if they have no cash and notify them
@@ -185,7 +183,7 @@ namespace H4_Poker_Engine.Services
             foreach (Player player in _players)
             {
                 await _hub.Clients.Client(player.ClientId)
-                    .SendAsync("GetPlayerCards", JsonSerializer.Serialize(player.CardHand[0]), JsonSerializer.Serialize(player.CardHand[1]));
+                    .SendAsync("GetPlayerCards", player.CardHand[0], player.CardHand[1]);
             }
 
             for (int i = 0; i < 5; i++)
@@ -224,7 +222,7 @@ namespace H4_Poker_Engine.Services
             //Set blinds randomly at start of game
             int smallBlindIndex = new Random().Next(0, _players.Count);
             _players[smallBlindIndex].Role = Role.SMALL_BLIND;
-            if (smallBlindIndex == _players.Count)
+            if (smallBlindIndex == _players.Count - 1)
                 _players[0].Role = Role.BIG_BLIND;
             else
                 _players[smallBlindIndex + 1].Role = Role.BIG_BLIND;
@@ -268,10 +266,10 @@ namespace H4_Poker_Engine.Services
                 Card tableThirdCard = _deck.FirstOrDefault();
                 _deck.Remove(tableThirdCard);
                 await _hub.Clients.All
-                    .SendAsync("GetFlop", 
-                    JsonSerializer.Serialize(tableFirstCard), 
-                    JsonSerializer.Serialize(tableSecondCard), 
-                    JsonSerializer.Serialize(tableThirdCard));
+                    .SendAsync("GetFlop",
+                    tableFirstCard,
+                    tableSecondCard,
+                    tableThirdCard);
             }
             else if (roundNumber == 2)
             {

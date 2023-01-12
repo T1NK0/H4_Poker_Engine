@@ -2,6 +2,7 @@
 
 namespace H4_Poker_Engine.Models
 {
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum Rank
     {
         ACE,
@@ -19,6 +20,7 @@ namespace H4_Poker_Engine.Models
         KING
     };
 
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum Suit
     {
         SPADES,
@@ -29,17 +31,15 @@ namespace H4_Poker_Engine.Models
 
     public class Card
     {
-        [JsonConverter(typeof(JsonStringEnumConverter))]
         public Rank Rank { get; set; }
 
-        [JsonConverter(typeof(JsonStringEnumConverter))]
         public Suit Suit { get; set; }
 
         public Card(Rank rank, Suit suit)
         {
             Rank = rank;
             Suit = suit;
-        }        
+        }
     }
 
     public class CardModel
