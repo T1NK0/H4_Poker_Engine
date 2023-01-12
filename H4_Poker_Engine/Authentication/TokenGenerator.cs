@@ -5,7 +5,7 @@ using System.Text;
 
 namespace H4_Poker_Engine.Authentication
 {
-    public class TokenGenerator
+    public class TokenGenerator : ITokenGenerator
     {
         #region fields
         private readonly IConfiguration _configuration;
