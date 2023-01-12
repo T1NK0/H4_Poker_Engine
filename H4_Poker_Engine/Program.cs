@@ -72,7 +72,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddHostedService<TableServiceWorker>();
 
 // DependencyInjection
-builder.Services.AddScoped<TokenGenerator>();
+builder.Services.AddScoped<ITokenGenerator, TokenGenerator>();
 builder.Services.AddTransient<IDeckFactory, DeckFactory>();
 builder.Services.AddTransient<IHandEvaluator, HandEvaluator>();
 builder.Services.AddTransient<BaseRuleSet, TexasHoldEmRules>();

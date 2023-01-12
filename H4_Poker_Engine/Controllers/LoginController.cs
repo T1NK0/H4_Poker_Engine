@@ -10,11 +10,11 @@ namespace H4_Poker_Engine.Controllers
     public class LoginController : ControllerBase
     {
         #region fields
-        private readonly TokenGenerator _tokenGenerator;
+        private readonly ITokenGenerator _tokenGenerator;
         #endregion
 
         #region Constructors
-        public LoginController(TokenGenerator tokenGenerator)
+        public LoginController(ITokenGenerator tokenGenerator)
         {
             _tokenGenerator = tokenGenerator;
         }
@@ -24,7 +24,7 @@ namespace H4_Poker_Engine.Controllers
         /// <summary>
         /// HttpGet method that returns a JWT Login Token.
         /// </summary>
-        /// <returns>Status of 200, and a login token, created from the TokenGenerator class.</returns>
+        /// <returns>JWT login token</returns>
         [HttpGet("guesttoken")]
         public async Task<ActionResult> GetLoginToken()
         {
@@ -34,8 +34,8 @@ namespace H4_Poker_Engine.Controllers
         /// <summary>
         /// HttpPost method that returns a JWT User Token.
         /// </summary>
-        /// <param name="username"></param>
-        /// <returns>Status of 200, and a user token, created from the TokenGenerator class.</returns>
+        /// <param name="username">Login DTO containing users player name</param>
+        /// <returns>JWT user token</returns>
         [HttpPost("usertoken"), Authorize]
         public async Task<ActionResult> GetUserToken(LoginDTO request)
         {
