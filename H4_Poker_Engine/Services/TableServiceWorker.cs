@@ -350,6 +350,14 @@ namespace H4_Poker_Engine.Services
                 roundCounter++;
                 DealCommunityCardsAsync(roundCounter);
                 _currentPlayer = _players.Where(p => p.Active).First();
+                _potManager.CurrentCallAmount = 0;
+                foreach (Player player in _players)
+                {
+                    if (player.Active)
+                    {
+                        player.CurrentBetInRound = 0;
+                    }
+                }
 
                 if (_players.Count(player => player.Active) > 1 && roundCounter == 4)
                 {
