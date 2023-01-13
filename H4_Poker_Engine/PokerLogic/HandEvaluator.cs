@@ -31,37 +31,37 @@ namespace H4_Poker_Engine.PokerLogic
             }
 
             hv = HasFullHouse(cards);
-            if (HasFullHouse(cards) != null)
+            if (hv != null)
             {
                 return hv;
             }
 
             hv = HasFlush(cards);
-            if (HasFlush(cards) != null)
+            if (hv != null)
             {
                 return hv;
             }
 
             hv = HasStraight(cards);
-            if (HasStraight(cards) != null)
+            if (hv != null)
             {
                 return hv;
             }
 
             hv = HasThreeOfAKind(cards);
-            if (HasThreeOfAKind(cards) != null)
+            if (hv != null)
             {
                 return hv;
             }
 
             hv = HasTwoPair(cards);
-            if (HasTwoPair(cards) != null)
+            if (hv != null)
             {
                 return hv;
             }
 
             hv = HasPair(cards);
-            if (HasPair(cards) != null)
+            if (hv != null)
             {
                 return hv;
             }
@@ -239,7 +239,7 @@ namespace H4_Poker_Engine.PokerLogic
                 {
                     return new HandValue(groups.ElementAt(1).First(),
                        groups.First().First(),
-                       HandRank.STRAIGHT);
+                       HandRank.TWOPAIR);
                 }
                 return null;
             }
@@ -259,7 +259,7 @@ namespace H4_Poker_Engine.PokerLogic
                 {
                     return new HandValue(cards.Where(card => !group.Contains(card)).First(),
                        group.First(),
-                       HandRank.STRAIGHT);
+                       HandRank.PAIR);
                 }
                 return null;
 

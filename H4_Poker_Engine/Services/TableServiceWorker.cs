@@ -3,6 +3,7 @@ using H4_Poker_Engine.Interfaces;
 using H4_Poker_Engine.Models;
 using H4_Poker_Engine.PokerLogic;
 using Microsoft.AspNetCore.SignalR;
+using System.Numerics;
 using System.Security.Cryptography.X509Certificates;
 
 namespace H4_Poker_Engine.Services
@@ -124,6 +125,7 @@ namespace H4_Poker_Engine.Services
             Console.WriteLine("------- Enters: Add New Player To Game -------");
             var newPlayer = new Player(user, clientId);
             _players.Add(newPlayer);
+            UpdatePlayerAmountAsync(newPlayer);
             Console.WriteLine($"New player added, total number of users: {_players.Count()}");
             await _hub.Clients.All.SendAsync("SendMessage", newPlayer.Username);
         }
