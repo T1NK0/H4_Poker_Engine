@@ -3,8 +3,6 @@ using H4_Poker_Engine.Interfaces;
 using H4_Poker_Engine.Models;
 using H4_Poker_Engine.PokerLogic;
 using Microsoft.AspNetCore.SignalR;
-using System.Numerics;
-using System.Security.Cryptography.X509Certificates;
 
 namespace H4_Poker_Engine.Services
 {
@@ -104,8 +102,13 @@ namespace H4_Poker_Engine.Services
                 }
             }
 
-            SetNextPlayer(playerJustPlayed);
-            BettingRoundAsync(_currentPlayer);
+            if (_players.Count(p => p.Active) > 1)
+            {
+                SetNextPlayer(playerJustPlayed);
+                BettingRoundAsync(_currentPlayer);
+            }
+            else
+                EndRound();
         }
 
         private async void UpdatePotAsync()
@@ -182,6 +185,7 @@ namespace H4_Poker_Engine.Services
             foreach (Player player in _players)
             {
                 player.CardHand.Clear();
+                player.Active = false;
             }
             _communityCards.Clear();
         }
@@ -369,21 +373,6 @@ namespace H4_Poker_Engine.Services
         private async void EndRound()
         {
             roundCounter++;
-            DealCommunityCardsAsync(roundCounter);
-            _currentPlayer = _players.Where(p => p.Active).First();
-            _potManager.CurrentCallAmount = 0;
-            foreach (Player player in _players)
-            {
-                if (player.Active)
-                {
-                    player.CurrentBetInRound = 0;
-                }
-            }
-
-            if (_players.Count(player => player.Active) > 1 && roundCounter == 4)
-            {
-                await _hub.Clients.All.SendAsync("Showdown", _players.Where(p => p.Active).ToList());
-            }
 
             if (roundCounter == 5 || _players.Count(p => p.Active) == 1)
             {
@@ -404,6 +393,23 @@ namespace H4_Poker_Engine.Services
                 _potManager.PayOutPotToWinners(winners);
                 winners.ForEach(player => UpdatePlayerAmountAsync(player));
                 _isGameRunning = false;
+                return;
+            }
+
+            DealCommunityCardsAsync(roundCounter);
+            _currentPlayer = _players.Where(p => p.Active).First();
+            _potManager.CurrentCallAmount = 0;
+            foreach (Player player in _players)
+            {
+                if (player.Active)
+                {
+                    player.CurrentBetInRound = 0;
+                }
+            }
+
+            if (_players.Count(player => player.Active) > 1 && roundCounter == 4)
+            {
+                await _hub.Clients.All.SendAsync("Showdown", _players.Where(p => p.Active).ToList());
             }
 
         }

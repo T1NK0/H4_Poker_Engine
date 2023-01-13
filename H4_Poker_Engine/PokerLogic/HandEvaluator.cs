@@ -218,7 +218,7 @@ namespace H4_Poker_Engine.PokerLogic
                 {
                     return new HandValue(cards.First(card => !threeKindCards.Contains(card)),
                         threeKindCards[0],
-                        HandRank.STRAIGHT);
+                        HandRank.THREEKIND);
                 }
                 return null;
             }

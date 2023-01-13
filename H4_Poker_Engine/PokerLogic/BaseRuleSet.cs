@@ -40,7 +40,7 @@ namespace H4_Poker_Engine.PokerLogic
 
             for (int i = 0; i < players.Count; i++)
             {
-                HandValue value = _handEvaluator.GetHandValue(players[0].CardHand);
+                HandValue value = _handEvaluator.GetHandValue(players[i].CardHand);
                 KeyValuePair<Player, HandValue> kv = new KeyValuePair<Player, HandValue>(players[i], value);
                 playerValues.Add(kv);
             }
