@@ -44,6 +44,7 @@ namespace H4_Poker_Engine.PokerLogic
         {
             int callAmount =  CurrentCallAmount - playerToTakeFrom.CurrentBetInRound;
             playerToTakeFrom.Money -= callAmount;
+            playerToTakeFrom.CurrentBetInRound += CurrentCallAmount;
             TotalPotAmount += callAmount;
             return callAmount;
         }

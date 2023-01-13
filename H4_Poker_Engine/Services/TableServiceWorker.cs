@@ -17,6 +17,7 @@ namespace H4_Poker_Engine.Services
         private PotManager _potManager;
         private RoleManager _roleManager;
         private PlayerActionEvaluator _playerActionManager;
+        private List<Card> _communityCards;
         private bool _isGameRunning = false;
         private bool _hasRaised = false;
         private bool _playerThinking = false;
@@ -46,6 +47,10 @@ namespace H4_Poker_Engine.Services
             if (_playerActionManager == null)
             {
                 _playerActionManager = new PlayerActionEvaluator();
+            }
+            if (_communityCards == null)
+            {
+                _communityCards = new List<Card>();
             }
 
 
@@ -276,6 +281,11 @@ namespace H4_Poker_Engine.Services
                 _deck.Remove(tableSecondCard);
                 Card tableThirdCard = _deck.FirstOrDefault();
                 _deck.Remove(tableThirdCard);
+
+                _communityCards.Add(tableFirstCard);
+                _communityCards.Add(tableSecondCard);
+                _communityCards.Add(tableThirdCard);
+
                 await _hub.Clients.All
                     .SendAsync("GetFlop",
                     tableFirstCard,
@@ -285,11 +295,13 @@ namespace H4_Poker_Engine.Services
             else if (roundNumber == 2)
             {
                 await _hub.Clients.All.SendAsync("GetTurn", _deck.First());
+                _communityCards.Add(_deck.First());
                 _deck.RemoveAt(0);
             }
             else if (roundNumber == 3)
             {
                 await _hub.Clients.All.SendAsync("GetRiver", _deck.First());
+                _communityCards.Add(_deck.First());
                 _deck.RemoveAt(0);
             }
 
@@ -346,6 +358,13 @@ namespace H4_Poker_Engine.Services
 
                 if (roundCounter == 5 || _players.Count(p => p.Active) == 1)
                 {
+                    for (int i = 0; i < _players.Count; i++)
+                    {
+                        if (_players[i].Active)
+                        {
+                            _players[i].CardHand.AddRange(_communityCards);
+                        }
+                    }
                     List<Player> winners = _rules.DetermineWinner(_players.Where(player => player.Active).ToList());
                     await _hub.Clients.All.SendAsync("ShowWinners", winners);
                     _potManager.PayOutPotToWinners(winners);
