@@ -8,7 +8,7 @@ namespace H4_Poker_Engine.PokerLogic
         {
             Dictionary<string, bool> validActions = new Dictionary<string, bool>
             {
-                { "call", CanCall(player, potManager, hasRaised) },
+                { "call", CanCall(player, potManager) },
                 { "raise", CanRaise(player, potManager) },
                 { "check", CanCheck(player, potManager, hasRaised) },
                 { "Fold", true }
@@ -17,16 +17,20 @@ namespace H4_Poker_Engine.PokerLogic
             return validActions;
         }
 
-        private bool CanCall(Player player, PotManager potManager, bool hasRaised)
+        private bool CanCall(Player player, PotManager potManager)
         {
-            if (player.CurrentBetInRound < potManager.Big_Blind)
+            if (potManager.CurrentCallAmount == 0)
+            {
+                return false;
+            }
+            else if (player.CurrentBetInRound < potManager.CurrentCallAmount)
             {
                 return true;
             }
-            else if (hasRaised && (player.CurrentBetInRound + player.Money) >= potManager.CurrentCallAmount)
-            {
-                return true;
-            }
+            //else if ((player.CurrentBetInRound + player.Money) >= potManager.CurrentCallAmount)
+            //{
+            //    return true;
+            //}
             //TODO do something about "all in"
             else if (true)
             {

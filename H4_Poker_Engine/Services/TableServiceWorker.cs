@@ -22,7 +22,9 @@ namespace H4_Poker_Engine.Services
         private PlayerActionEvaluator _playerActionManager;
         private bool _isGameRunning = false;
         private bool _hasRaised = false;
-        private bool _playerThinking = false;
+        private Player _currentPlayer;
+        private int roundCounter = 0;
+        private int _endingPlayerIndex = 0;
 
         public TableServiceWorker(IHubContext<BasePokerHub> hubContext, BasePokerHub hub,
             BaseRuleSet ruleSet, IDeckFactory deckFactory)
@@ -60,37 +62,48 @@ namespace H4_Poker_Engine.Services
 
         private async void PlayerMadeActionAsync(string user, string action, int raiseAmount, string clientId)
         {
-            Player player = _players.Where(p => p.ClientId == clientId).First();
+            Console.WriteLine("------- Enters: Player Made Action -------");
+            //This method would be a good talking point, as it prob breaks the S in solid.
+            Player playerJustPlayed = _players.Where(p => p.ClientId == clientId).First();
 
-            switch (action)
+            SetNextPlayer(playerJustPlayed);
+
+            if (_currentPlayer.ClientId == playerJustPlayed.ClientId)
             {
-                case "call":
-                    _potManager.CallPot(player);
-                    await _hubContext.Clients.All
-                        .SendAsync("SendMessage", $"{player.Username} has called and added {raiseAmount} to the pot");
-                    UpdatePotAsync();
-                    UpdatePlayerAmountAsync(player);
-                    break;
-                case "raise":
-                    _hasRaised = true;
-                    _potManager.RaisePot(raiseAmount, player);
-                    await _hubContext.Clients.All
-                        .SendAsync("SendMessage", $"{player.Username} has raised the pot with {raiseAmount} turkey coins!");
-                    UpdatePotAsync();
-                    UpdatePlayerAmountAsync(player);
-                    break;
-                case "fold":
-                    player.Active = false;
-                    await _hubContext.Clients.All
-                        .SendAsync("SendMessage", $"{player.Username} has folded");
-                    break;
-                case "check":
-                    await _hubContext.Clients.All
-                        .SendAsync("SendMessage", $"{player.Username} checks");
-                    break;
+                switch (action)
+                {
+                    case "call":
+                        int callAmount = _potManager.CallPot(playerJustPlayed);
+                        await _hub.Clients.All
+                            .SendAsync("SendMessage", $"{playerJustPlayed.Username} has called and added {callAmount} to the pot");
+                        UpdatePotAsync();
+                        UpdatePlayerAmountAsync(playerJustPlayed);
+                        break;
+                    case "raise":
+                        int index = _players.IndexOf(playerJustPlayed);
+                        if (index > 0)
+                        {
+                            //Used if there are people before the raising player, who need to be able to raise again
+                            _endingPlayerIndex = index;
+                            _hasRaised = true;
+                        }
+                        _potManager.RaisePot(raiseAmount, playerJustPlayed);
+                        await _hub.Clients.All
+                            .SendAsync("SendMessage", $"{playerJustPlayed.Username} has raised the pot with {raiseAmount} turkey coins!");
+                        UpdatePotAsync();
+                        UpdatePlayerAmountAsync(playerJustPlayed);
+                        break;
+                    case "fold":
+                        playerJustPlayed.Active = false;
+                        await _hub.Clients.All
+                            .SendAsync("SendMessage", $"{playerJustPlayed.Username} has folded");
+                        break;
+                    case "check":
+                        await _hub.Clients.All
+                            .SendAsync("SendMessage", $"{playerJustPlayed.Username} checks");
+                        break;
+                }
             }
-            _playerThinking = false;
-        }
 
         private async void UpdatePotAsync()
         {
@@ -161,7 +174,7 @@ namespace H4_Poker_Engine.Services
         {
             _deck = _deckFactory.GetNewDeck();
             _potManager.TotalPotAmount = 0;
-
+            _endingPlayerIndex = _players.Count - 1;
             //if there's no big blind, we assume there is no small blind either.
             if (!_players.Any(p => p.Role == Role.BIG_BLIND))
                 SetBlinds();
@@ -282,20 +295,118 @@ namespace H4_Poker_Engine.Services
                 await _hubContext.Clients.All.SendAsync("GetRiver", _deck.First());
                 _deck.RemoveAt(0);
             }
+
         }
 
-        private async void BettingRoundAsync()
+        private async void BettingRoundAsync(Player currentPlayer)
         {
-            for (int i = 0; i < _players.Count; i++)
+            Console.WriteLine("------- Enters: Betting Round -------");
+            //for (int i = 0; i < _players.Count; i++)
+            //{
+            //if (_players[i].Active)
+            //{
+            //Player currentUser = _players[i];
+            //_playerThinking = true;
+            Console.WriteLine($"******* Userturn: {currentPlayer.Username} *******");
+            await _hub.Clients.Client(currentPlayer.ClientId)
+                .SendAsync("ActionReady", _playerActionManager.GetValidActions(currentPlayer, _potManager, _hasRaised));
+            //while (_playerThinking) ;
+            //}
+            //}
+        }
+
+
+        private async void SetNextPlayer(Player previousPlayer)
+        {
+            int indexOfPrevious = _players.IndexOf(previousPlayer);
+            if (!_hasRaised)
             {
-                if (_players[i].Active)
+                //normal loop with no raises
+                if (indexOfPrevious + 1 < _players.Count)
                 {
-                    Player currentUser = _players[i];
-                    _playerThinking = true;
-                    await _hubContext.Clients.Client(currentUser.ClientId)
-                        .SendAsync("ActionReady", _playerActionManager.GetValidActions(currentUser, _potManager, _hasRaised));
-                    while (_playerThinking) ;
+                    for (int i = indexOfPrevious + 1; i < _players.Count; i++)
+                    {
+                        if (_players[i].Active)
+                        {
+                            _currentPlayer = _players[i];
+                            i = _players.Count;
+                        }
+                    }
                 }
+                else if (indexOfPrevious + 1 == _players.Count)
+                {
+                    EndRound();
+                }
+            }
+            else
+            {
+                if(indexOfPrevious + 1 == _endingPlayerIndex)
+                {
+                    _hasRaised = false;
+                    EndRound();
+                }
+                else if (indexOfPrevious + 1 == _players.Count)
+                {
+                    _currentPlayer = _players.Where(p => p.Active).First();
+                }
+                else if (indexOfPrevious > _endingPlayerIndex)
+                {
+                    for (int i = indexOfPrevious + 1; i < _players.Count; i++)
+                    {
+                        if (_players[i].Active)
+                        {
+                            _currentPlayer = _players[i];
+                            i = _players.Count;
+                        }
+                    }
+                }
+                else
+                {
+                    for (int i = indexOfPrevious + 1; i < _endingPlayerIndex; i++)
+                    {
+                        if (_players[i].Active)
+                        {
+                            _currentPlayer = _players[i];
+                            i = _players.Count;
+                        }
+                    }
+                }
+            }
+        }
+
+        private async void EndRound()
+        {
+            roundCounter++;
+            _endingPlayerIndex = _players.Count - 1;
+            DealCommunityCardsAsync(roundCounter);
+            _currentPlayer = _players.Where(p => p.Active).First();
+            _potManager.CurrentCallAmount = 0;
+            foreach (Player player in _players)
+            {
+                if (player.Active)
+                {
+                    player.CurrentBetInRound = 0;
+                }
+            }
+
+            if (_players.Count(player => player.Active) > 1 && roundCounter == 4)
+            {
+                await _hub.Clients.All.SendAsync("Showdown", _players.Where(p => p.Active).ToList());
+            }
+
+            if (roundCounter == 5 || _players.Count(p => p.Active) == 1)
+            {
+                for (int i = 0; i < _players.Count; i++)
+                {
+                    if (_players[i].Active)
+                    {
+                        _players[i].CardHand.AddRange(_communityCards);
+                    }
+                }
+                List<Player> winners = _rules.DetermineWinner(_players.Where(player => player.Active).ToList());
+                await _hub.Clients.All.SendAsync("ShowWinners", winners);
+                _potManager.PayOutPotToWinners(winners);
+                winners.ForEach(player => UpdatePlayerAmountAsync(player));
             }
         }
 
