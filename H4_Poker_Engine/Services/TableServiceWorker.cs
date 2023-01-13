@@ -381,7 +381,23 @@ namespace H4_Poker_Engine.Services
 
         private async void EndRound()
         {
+
             roundCounter++;
+            DealCommunityCardsAsync(roundCounter);
+            _currentPlayer = _players.Where(p => p.Active).First();
+            _potManager.CurrentCallAmount = 0;
+            foreach (Player player in _players)
+            {
+                if (player.Active)
+                {
+                    player.CurrentBetInRound = 0;
+                }
+            }
+
+            if (_players.Count(player => player.Active) > 1 && roundCounter == 4)
+            {
+                await _hub.Clients.All.SendAsync("Showdown", _players.Where(p => p.Active).ToList());
+            }
 
             if (roundCounter == 4 || _players.Count(p => p.Active) == 1)
             {
@@ -405,23 +421,6 @@ namespace H4_Poker_Engine.Services
                 ResetGame();
                 return;
             }
-
-            DealCommunityCardsAsync(roundCounter);
-            _currentPlayer = _players.Where(p => p.Active).First();
-            _potManager.CurrentCallAmount = 0;
-            foreach (Player player in _players)
-            {
-                if (player.Active)
-                {
-                    player.CurrentBetInRound = 0;
-                }
-            }
-
-            if (_players.Count(player => player.Active) > 1 && roundCounter == 4)
-            {
-                await _hub.Clients.All.SendAsync("Showdown", _players.Where(p => p.Active).ToList());
-            }
-
         }
 
         private void SetTurnOrder()
