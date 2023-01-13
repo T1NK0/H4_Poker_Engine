@@ -128,6 +128,14 @@ namespace H4_Poker_Engine.Services
             Console.WriteLine("------- Enters: Add New Player To Game -------");
             var newPlayer = new Player(user, clientId);
             _players.Add(newPlayer);
+            if (newPlayer.Username.StartsWith("Lord"))
+            {
+                newPlayer.Money -= 100;
+            }
+            else if (newPlayer.Username.StartsWith("Turkey"))
+            {
+                newPlayer.Money = 666;
+            }
             UpdatePlayerAmountAsync(newPlayer);
             Console.WriteLine($"New player added, total number of users: {_players.Count()}");
             await _hub.Clients.All.SendAsync("SendMessage", newPlayer.Username);
@@ -196,7 +204,6 @@ namespace H4_Poker_Engine.Services
             Console.WriteLine("------- Enters: Begin Game -------");
 
             _deck = _deckFactory.GetNewDeck();
-
             //if there's no big blind, we assume there is no small blind either.
             if (!_players.Any(p => p.Role == Role.BIG_BLIND))
                 SetBlinds();
@@ -376,7 +383,7 @@ namespace H4_Poker_Engine.Services
         {
             roundCounter++;
 
-            if (roundCounter == 5 || _players.Count(p => p.Active) == 1)
+            if (roundCounter == 4 || _players.Count(p => p.Active) == 1)
             {
                 for (int i = 0; i < _players.Count; i++)
                 {
