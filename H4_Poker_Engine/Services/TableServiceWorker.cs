@@ -195,6 +195,8 @@ namespace H4_Poker_Engine.Services
         {
             Console.WriteLine("------- Enters: Begin Game -------");
 
+            _deck = _deckFactory.GetNewDeck();
+
             //if there's no big blind, we assume there is no small blind either.
             if (!_players.Any(p => p.Role == Role.BIG_BLIND))
                 SetBlinds();
