@@ -186,6 +186,7 @@ namespace H4_Poker_Engine.Services
             {
                 player.CardHand.Clear();
                 player.Active = false;
+                player.Role = Role.NONE;
             }
             _communityCards.Clear();
         }
@@ -193,7 +194,6 @@ namespace H4_Poker_Engine.Services
         private async void BeginGameAsync()
         {
             Console.WriteLine("------- Enters: Begin Game -------");
-            ResetGame();
 
             //if there's no big blind, we assume there is no small blind either.
             if (!_players.Any(p => p.Role == Role.BIG_BLIND))
@@ -393,6 +393,7 @@ namespace H4_Poker_Engine.Services
                 _potManager.PayOutPotToWinners(winners);
                 winners.ForEach(player => UpdatePlayerAmountAsync(player));
                 _isGameRunning = false;
+                ResetGame();
                 return;
             }
 
