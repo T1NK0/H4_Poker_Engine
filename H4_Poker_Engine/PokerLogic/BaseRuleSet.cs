@@ -46,8 +46,10 @@ namespace H4_Poker_Engine.PokerLogic
             }
 
             playerValues.OrderBy(kv => kv.Value.HandRank).ToList();
+            HandValue highestValue = playerValues.First().Value;
+
             List<KeyValuePair<Player, HandValue>> highestHandRankPlayers =
-                playerValues.Where(kv => kv.Value.HandRank == playerValues[0].Value.HandRank).ToList();
+                playerValues.Where(kv => kv.Value.HandRank == highestValue.HandRank).ToList();
             if (highestHandRankPlayers.Count > 1)
             {
                 //At least 2 players have the same HandRank
@@ -79,7 +81,7 @@ namespace H4_Poker_Engine.PokerLogic
             }
             else
             {
-                return new List<Player>() { playerValues[0].Key };
+                return new List<Player>() { highestHandRankPlayers[0].Key };
             }
         }
 

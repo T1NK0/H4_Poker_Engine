@@ -172,12 +172,22 @@ namespace H4_Poker_Engine.Services
             }
         }
 
-        private async void BeginGameAsync()
+        private void ResetGame()
         {
-            Console.WriteLine("------- Enters: Begin Game -------");
             _deck = _deckFactory.GetNewDeck();
             _potManager.TotalPotAmount = 0;
             _endingPlayerIndex = _players.Count - 1;
+            foreach (Player player in _players)
+            {
+                player.CardHand.Clear();
+            }
+            _communityCards.Clear();
+        }
+
+        private async void BeginGameAsync()
+        {
+            Console.WriteLine("------- Enters: Begin Game -------");
+            ResetGame();
 
             //if there's no big blind, we assume there is no small blind either.
             if (!_players.Any(p => p.Role == Role.BIG_BLIND))

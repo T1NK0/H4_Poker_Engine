@@ -181,21 +181,23 @@ namespace H4_Poker_Engine.PokerLogic
             for (int i = 0; i < cards.Count - 4; i++)
             {
                 bool isStraight = true;
+                bool hasDuplicate = false;
                 for (int j = i; j < i + 5; j++)
                 {
-                    //Keep looping through, even if we have 2 of the same card
-                    //example: 2, 3, 4, 4, 5, 6 would still be a straight
-                    if (cards[j + 1].Rank != cards[j].Rank)
+                    if (j + 1 < cards.Count)
                     {
-                        if (cards[j + 1].Rank != cards[j].Rank + 1)
+                        if (cards[j + 1].Rank == cards[j].Rank)
+                        {
+                            hasDuplicate = true;
+                        }
+                        else if (cards[j + 1].Rank != cards[j].Rank + 1)
                         {
                             isStraight = false;
                             break;
                         }
                     }
                 }
-
-                if (isStraight)
+                if (isStraight && !hasDuplicate)
                 {
                     List<Card> straightCards = cards.Skip(i).Take(5).ToList();
                     return new HandValue(cards.First(card => !straightCards.Contains(card)),
@@ -220,7 +222,7 @@ namespace H4_Poker_Engine.PokerLogic
                 }
                 return null;
             }
-            catch (Exception e )
+            catch (Exception e)
             {
                 Console.WriteLine(e.Message);
                 return null;
@@ -228,28 +230,45 @@ namespace H4_Poker_Engine.PokerLogic
         }
         private HandValue HasTwoPair(List<Card> cards)
         {
-            //Uses GroupBy to group by rank, then counts how many groups have 2 in them.
-            var groups = cards.GroupBy(cards => cards.Rank).Where(group => group.Count() == 2).ToList();
-
-            if (groups.Count >= 2)
+            try
             {
-                return new HandValue(groups.ElementAt(1).First(),
-                   groups.First().First(),
-                   HandRank.STRAIGHT);
+                //Uses GroupBy to group by rank, then counts how many groups have 2 in them.
+                var groups = cards.GroupBy(cards => cards.Rank).Where(group => group.Count() == 2).ToList();
+
+                if (groups.Count >= 2)
+                {
+                    return new HandValue(groups.ElementAt(1).First(),
+                       groups.First().First(),
+                       HandRank.STRAIGHT);
+                }
+                return null;
             }
-            return null;
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                return null;
+            }
         }
         private HandValue HasPair(List<Card> cards)
         {
-            //Uses GroupBy to group by rank, then checks if any group has count == 2
-            var group = cards.GroupBy(card => card.Rank).First(group => group.Count() == 2).ToList();
-            if (group.Count >= 1)
+            try
             {
-                return new HandValue(cards.Where(card => !group.Contains(card)).First(),
-                   group.First(),
-                   HandRank.STRAIGHT);
+                //Uses GroupBy to group by rank, then checks if any group has count == 2
+                var group = cards.GroupBy(card => card.Rank).First(group => group.Count() == 2).ToList();
+                if (group.Count >= 1)
+                {
+                    return new HandValue(cards.Where(card => !group.Contains(card)).First(),
+                       group.First(),
+                       HandRank.STRAIGHT);
+                }
+                return null;
+
             }
-            return null;
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                return null;
+            }
         }
     }
 }
