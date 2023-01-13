@@ -227,7 +227,7 @@ namespace H4_Poker_Engine.Services
             //    else
             //        i = 5;
             //}
-            //Do showdown           
+            //Do showdown
         }
 
         private void SetBlinds()

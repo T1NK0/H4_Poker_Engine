@@ -19,7 +19,11 @@ namespace H4_Poker_Engine.PokerLogic
 
         private bool CanCall(Player player, PotManager potManager, bool hasRaised)
         {
-            if (player.CurrentBetInRound < potManager.Big_Blind)
+            if (potManager.CurrentCallAmount == 0)
+            {
+                return false;
+            }
+            else if (player.CurrentBetInRound < potManager.Big_Blind)
             {
                 return true;
             }
@@ -28,10 +32,6 @@ namespace H4_Poker_Engine.PokerLogic
                 return true;
             }
             //TODO do something about "all in"
-            else if (true)
-            {
-
-            }
             return false;
         }
         private bool CanRaise(Player player, PotManager potManager)
