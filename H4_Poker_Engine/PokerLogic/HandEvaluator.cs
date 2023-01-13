@@ -4,7 +4,7 @@ using H4_Poker_Engine.Models;
 namespace H4_Poker_Engine.PokerLogic
 {
     public class HandEvaluator : IHandEvaluator
-    {       
+    {
         public virtual HandValue GetHandValue(List<Card> hand)
         {
             List<Card> cards = hand.OrderByDescending(card => card.Rank)
@@ -208,15 +208,23 @@ namespace H4_Poker_Engine.PokerLogic
 
         private HandValue HasThreeOfAKind(List<Card> cards)
         {
-            //Uses GroupBy to group by rank, then checks if any group has count == 3
-            List<Card> threeKindCards = cards.GroupBy(card => card.Rank).First(group => group.Count() == 3).ToList();
-            if (threeKindCards != null)
+            try
             {
-                return new HandValue(cards.First(card => !threeKindCards.Contains(card)),
-                    threeKindCards[0],
-                    HandRank.STRAIGHT);
+                //Uses GroupBy to group by rank, then checks if any group has count == 3
+                List<Card> threeKindCards = cards.GroupBy(card => card.Rank).First(group => group.Count() == 3).ToList();
+                if (threeKindCards != null)
+                {
+                    return new HandValue(cards.First(card => !threeKindCards.Contains(card)),
+                        threeKindCards[0],
+                        HandRank.STRAIGHT);
+                }
+                return null;
             }
-            return null;
+            catch (Exception e )
+            {
+                Console.WriteLine(e.Message);
+                return null;
+            }
         }
         private HandValue HasTwoPair(List<Card> cards)
         {

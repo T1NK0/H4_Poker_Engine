@@ -69,8 +69,6 @@ namespace H4_Poker_Engine.Services
             //This method would be a good talking point, as it prob breaks the S in solid.
             Player playerJustPlayed = _players.Where(p => p.ClientId == clientId).First();
 
-            SetNextPlayer(playerJustPlayed);
-
             if (_currentPlayer.ClientId == playerJustPlayed.ClientId)
             {
                 switch (action)
@@ -83,7 +81,10 @@ namespace H4_Poker_Engine.Services
                         UpdatePlayerAmountAsync(playerJustPlayed);
                         break;
                     case "raise":
-                        _hasRaised = true;
+                        if (_players.IndexOf(playerJustPlayed) > 0)
+                        {
+                            _hasRaised = true;
+                        }
                         _potManager.RaisePot(raiseAmount, playerJustPlayed);
                         await _hub.Clients.All
                             .SendAsync("SendMessage", $"{playerJustPlayed.Username} has raised the pot with {raiseAmount} turkey coins!");
@@ -101,6 +102,8 @@ namespace H4_Poker_Engine.Services
                         break;
                 }
             }
+
+            SetNextPlayer(playerJustPlayed);
             BettingRoundAsync(_currentPlayer);
         }
 
@@ -288,6 +291,7 @@ namespace H4_Poker_Engine.Services
             Console.WriteLine($"******* Userturn: {currentPlayer.Username} *******");
             await _hub.Clients.Client(currentPlayer.ClientId)
                 .SendAsync("ActionReady", _playerActionManager.GetValidActions(currentPlayer, _potManager, _hasRaised));
+            Console.WriteLine($"------- Fired ActionReady against {currentPlayer.Username} -------");
         }
 
 
@@ -379,7 +383,12 @@ namespace H4_Poker_Engine.Services
                     }
                 }
                 List<Player> winners = _rules.DetermineWinner(_players.Where(player => player.Active).ToList());
-                await _hub.Clients.All.SendAsync("ShowWinners", winners);
+                List<string> winnerNames = new List<string>();
+                for (int i = 0; i < winners.Count; i++)
+                {
+                    winnerNames.Add(winners[i].Username);
+                }
+                await _hub.Clients.All.SendAsync("ShowWinners", winnerNames);
                 _potManager.PayOutPotToWinners(winners);
                 winners.ForEach(player => UpdatePlayerAmountAsync(player));
                 _isGameRunning = false;
@@ -393,9 +402,12 @@ namespace H4_Poker_Engine.Services
             //Swap the order of the 2 players
             if (_players.Count == 2)
             {
-                Player nextPlayer = _players[0];
-                _players.Remove(nextPlayer);
-                _players.Add(nextPlayer);
+                if (_players[0].Role == Role.BIG_BLIND)
+                {
+                    Player nextPlayer = _players[0];
+                    _players.Remove(nextPlayer);
+                    _players.Add(nextPlayer);
+                }
             }
             if (_players.Count >= 3)
             {

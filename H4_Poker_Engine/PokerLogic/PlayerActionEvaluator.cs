@@ -13,7 +13,6 @@ namespace H4_Poker_Engine.PokerLogic
                 { "check", CanCheck(player, potManager, hasRaised) },
                 { "fold", true }
             };
-
             return validActions;
         }
 
@@ -24,6 +23,10 @@ namespace H4_Poker_Engine.PokerLogic
                 return false;
             }
             else if (player.CurrentBetInRound < potManager.Big_Blind)
+            {
+                return true;
+            }
+            else if(player.CurrentBetInRound < potManager.CurrentCallAmount)
             {
                 return true;
             }
