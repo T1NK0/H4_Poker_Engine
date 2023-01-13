@@ -58,7 +58,12 @@ namespace H4_Poker_Engine.PokerLogic
 
         private void MoveBigBlind(List<Player> players, int amountToPay)
         {
-            int currentRoleIndex = players.IndexOf(players.Find(p => p.Role == Role.BIG_BLIND));
+            int currentRoleIndex = -1;
+            Player previousBB = players.Find(p => p.Role == Role.BIG_BLIND);
+            if (previousBB != null)
+            {
+                currentRoleIndex = players.IndexOf(previousBB);
+            }
 
             if (currentRoleIndex == -1)
             {
@@ -72,14 +77,15 @@ namespace H4_Poker_Engine.PokerLogic
                         i = players.Count;
                     }
                 }
-
             }
             else
             {
                 for (int i = 0; i < players.Count; i++)
                 {
                     int index = (i + currentRoleIndex) % players.Count;
-                    if (players[index].Role != Role.BIG_BLIND && players[index].Money >= amountToPay)
+                    if (players[index].Role != Role.BIG_BLIND
+                        && players[index].Role != Role.SMALL_BLIND
+                        && players[index].Money >= amountToPay)
                     {
                         players[index].Role = Role.BIG_BLIND;
                         players[currentRoleIndex].Role = Role.NONE;

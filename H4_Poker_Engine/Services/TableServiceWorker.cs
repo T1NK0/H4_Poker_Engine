@@ -20,7 +20,7 @@ namespace H4_Poker_Engine.Services
         private bool _isGameRunning = false;
         private bool _hasRaised = false;
         private Player _currentPlayer;
-        private int roundCounter = 0;
+        private int _roundCounter = 0;
         private int _endingPlayerIndex;
 
         public TableServiceWorker(BasePokerHub hub,
@@ -84,6 +84,7 @@ namespace H4_Poker_Engine.Services
                         {
                             _hasRaised = true;
                         }
+                        _endingPlayerIndex = _players.IndexOf(playerJustPlayed);
                         _potManager.RaisePot(raiseAmount, playerJustPlayed);
                         await _hub.Clients.All
                             .SendAsync("SendMessage", $"{playerJustPlayed.Username} has raised the pot with {raiseAmount} turkey coins!");
@@ -101,7 +102,6 @@ namespace H4_Poker_Engine.Services
                         break;
                 }
             }
-
             if (_players.Count(p => p.Active) > 1)
             {
                 SetNextPlayer(playerJustPlayed);
@@ -190,11 +190,12 @@ namespace H4_Poker_Engine.Services
             _deck = _deckFactory.GetNewDeck();
             _potManager.TotalPotAmount = 0;
             _endingPlayerIndex = _players.Count - 1;
+            _roundCounter = 0;
             foreach (Player player in _players)
             {
                 player.CardHand.Clear();
                 player.Active = false;
-                player.Role = Role.NONE;
+                //player.Role = Role.NONE;
             }
             _communityCards.Clear();
         }
@@ -213,6 +214,7 @@ namespace H4_Poker_Engine.Services
             {
                 await _hub.Clients.All
                     .SendAsync("SendMessage", "Something went wrong with Moving roles, there was no suitable blind holder(s)");
+                ResetGame();
                 return;
             }
             SetTurnOrder();
@@ -348,6 +350,7 @@ namespace H4_Poker_Engine.Services
                 if (indexOfPrevious + 1 == _endingPlayerIndex)
                 {
                     _hasRaised = false;
+                    //Something fucky about this
                     EndRound();
                 }
                 else if (indexOfPrevious + 1 == _players.Count)
@@ -382,8 +385,8 @@ namespace H4_Poker_Engine.Services
         private async void EndRound()
         {
 
-            roundCounter++;
-            DealCommunityCardsAsync(roundCounter);
+            _roundCounter++;
+            DealCommunityCardsAsync(_roundCounter);
             _currentPlayer = _players.Where(p => p.Active).First();
             _potManager.CurrentCallAmount = 0;
             foreach (Player player in _players)
@@ -394,12 +397,12 @@ namespace H4_Poker_Engine.Services
                 }
             }
 
-            if (_players.Count(player => player.Active) > 1 && roundCounter == 4)
+            if (_players.Count(player => player.Active) > 1 && _roundCounter == 4)
             {
                 await _hub.Clients.All.SendAsync("Showdown", _players.Where(p => p.Active).ToList());
             }
 
-            if (roundCounter == 4 || _players.Count(p => p.Active) == 1)
+            if (_roundCounter == 4 || _players.Count(p => p.Active) == 1)
             {
                 for (int i = 0; i < _players.Count; i++)
                 {
@@ -447,7 +450,6 @@ namespace H4_Poker_Engine.Services
                         break;
                     }
                 }
-
                 if (bigBlindIndex >= 0)
                 {
                     Player nextPlayer = _players[(bigBlindIndex + 1) % _players.Count];

@@ -18,7 +18,7 @@ namespace H4_Poker_Engine.PokerLogic
 
         // TODO: talk about this!
         //public abstract void AssignRoles(List<Player> players);
-        
+
         public virtual void DealCards(List<Player> playersToDeal, List<Card> deck, int amountToDeal)
         {
             Console.WriteLine("------- Enters: Deal User Cards -------");
@@ -35,54 +35,85 @@ namespace H4_Poker_Engine.PokerLogic
         //override this and also take note of community cards, if playing texas hold em
         public virtual List<Player> DetermineWinner(List<Player> players)
         {
+            Dictionary<int, List<Player>> handRanks = new Dictionary<int, List<Player>>();
 
-            List<KeyValuePair<Player, HandValue>> playerValues = new List<KeyValuePair<Player, HandValue>>();
+            //List<KeyValuePair<Player, HandValue>> playerValues = new List<KeyValuePair<Player, HandValue>>();
 
             for (int i = 0; i < players.Count; i++)
             {
                 HandValue value = _handEvaluator.GetHandValue(players[i].CardHand);
-                KeyValuePair<Player, HandValue> kv = new KeyValuePair<Player, HandValue>(players[i], value);
-                playerValues.Add(kv);
-            }
-
-            playerValues.OrderBy(kv => kv.Value.HandRank).ToList();
-            HandValue highestValue = playerValues.First().Value;
-
-            List<KeyValuePair<Player, HandValue>> highestHandRankPlayers =
-                playerValues.Where(kv => kv.Value.HandRank == highestValue.HandRank).ToList();
-            if (highestHandRankPlayers.Count > 1)
-            {
-                //At least 2 players have the same HandRank
-                //Compare all players' highest card and determine winner
-                List<Player> winningPlayers = new List<Player>();
-                HandValue highestCard = null;
-                for (int i = 0; i < highestHandRankPlayers.Count; i++)
+                //KeyValuePair<Player, HandValue> kv = new KeyValuePair<Player, HandValue>(players[i], value);
+                if (handRanks.ContainsKey((int)value.HandRank))
                 {
-                    //if this is first iteration or if the [i] players rank is bigger thank the currently biggest,
-                    //add him to winners and remove the old winner
-                    if (highestCard == null ||
-                        highestHandRankPlayers[i].Value.HandRankCardType.Rank > highestCard.HandRankCardType.Rank)
-                    {
-                        winningPlayers.Clear();
-                        winningPlayers.Add(highestHandRankPlayers[i].Key);
-                        highestCard = highestHandRankPlayers[i].Value;
-                        continue;
-                    }
-
-                    //add the player to winningPlayers, if they have the same handRank
-                    if (highestHandRankPlayers[i].Value.HandRankCardType.Rank == highestCard.HandRankCardType.Rank)
-                    {
-                        //Split the pot
-                        winningPlayers.Add(highestHandRankPlayers[i].Key);
-                        continue;
-                    }
+                    handRanks[(int)value.HandRank].Add(players[i]);
                 }
-                return winningPlayers;
+                else
+                    handRanks.Add((int)value.HandRank, new List<Player>() { players[i] });
+
+                //playerValues.Add(kv);
             }
-            else
+
+            handRanks.OrderByDescending(kv => kv.Key);
+            if (handRanks.First().Value.Count == 1)
             {
-                return new List<Player>() { highestHandRankPlayers[0].Key };
+                return handRanks.First().Value;
             }
+            List<Player> winners = new List<Player>();
+            Dictionary<decimal, List<Player>> newDic = new Dictionary<decimal, List<Player>>();
+
+            foreach (Player player in handRanks.First().Value)
+            {
+                decimal handSum = player.CardHand.Sum(card => (decimal)card.Rank);
+                if (newDic.ContainsKey(handSum))
+                {
+                    newDic[handSum].Add(player);
+                }
+                else
+                    newDic.Add(handSum, new List<Player>() { player });
+            }
+
+            newDic.OrderByDescending(kv => kv.Key);
+            return newDic.First().Value;
+
+
+            //playerValues.OrderBy(kv => kv.Value.HandRank).ToList();
+            //HandValue highestValue = playerValues.First().Value;
+
+            //List<KeyValuePair<Player, HandValue>> highestHandRankPlayers =
+            //    playerValues.Where(kv => kv.Value.HandRank == highestValue.HandRank).ToList();
+            //if (highestHandRankPlayers.Count > 1)
+            //{
+            //    //At least 2 players have the same HandRank
+            //    //Compare all players' highest card and determine winner
+            //    List<Player> winningPlayers = new List<Player>();
+            //    HandValue highestCard = null;
+            //    for (int i = 0; i < highestHandRankPlayers.Count; i++)
+            //    {
+            //        //if this is first iteration or if the [i] players rank is bigger thank the currently biggest,
+            //        //add him to winners and remove the old winner
+            //        if (highestCard == null ||
+            //            highestHandRankPlayers[i].Value.HandRankCardType.Rank > highestCard.HandRankCardType.Rank)
+            //        {
+            //            winningPlayers.Clear();
+            //            winningPlayers.Add(highestHandRankPlayers[i].Key);
+            //            highestCard = highestHandRankPlayers[i].Value;
+            //            continue;
+            //        }
+
+            //        //add the player to winningPlayers, if they have the same handRank
+            //        if (highestHandRankPlayers[i].Value.HandRankCardType.Rank == highestCard.HandRankCardType.Rank)
+            //        {
+            //            //Split the pot
+            //            winningPlayers.Add(highestHandRankPlayers[i].Key);
+            //            continue;
+            //        }
+            //    }
+            //    return winningPlayers;
+            //}
+            //else
+            //{
+            //    return new List<Player>() { highestHandRankPlayers[0].Key };
+            //}
         }
 
 
