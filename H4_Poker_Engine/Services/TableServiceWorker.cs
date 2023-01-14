@@ -187,6 +187,7 @@ namespace H4_Poker_Engine.Services
 
         private void ResetGame()
         {
+            roundCounter = 0;
             _deck = _deckFactory.GetNewDeck();
             _potManager.TotalPotAmount = 0;
             _endingPlayerIndex = _players.Count - 1;
