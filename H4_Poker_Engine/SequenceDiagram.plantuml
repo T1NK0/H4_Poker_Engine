@@ -1,0 +1,120 @@
+@startuml Play Round
+title Play A Round Of Poker
+
+skinparam ResponseMessageBelowArrow true
+skinparam SequenceMessageAlignment center
+actor User
+boundary application
+participant Hub
+participant TableWorker
+entity RoleManager
+participant Ruleset
+entity PotManager
+entity HandEvaluator
+entity PlayerActionEvaluator
+entity DeckFactory
+
+User -> application ++ : Player Ready
+application -> Hub --++ : Player Ready
+Hub -> TableWorker --++: Set Player Ready
+TableWorker -> TableWorker ++: Set Player Active
+TableWorker --> Hub --++: BroadCast User Ready
+Hub --> application --: BroadCast User Ready
+TableWorker -> TableWorker --++: CheckGameCanBegin
+
+alt BeginGame
+    TableWorker -> DeckFactory ++: Create Deck
+    DeckFactory -> DeckFactory ++--: ShuffleDeck
+    DeckFactory --> TableWorker --: Return Deck
+    alt FirstRound
+        TableWorker -> TableWorker ++--: Set Blinds
+    end
+    alt NotFirstRound
+        TableWorker -> RoleManager ++:  Move Roles
+        RoleManager -> RoleManager --:  Move Roles
+    end
+    TableWorker -> TableWorker ++--: Set Turn Order
+    TableWorker -> PotManager : Pay Blinds
+    activate PotManager
+    PotManager -> PotManager ++--: Take From Blinds
+    deactivate PotManager
+    TableWorker -> Ruleset : Deal Cards
+    activate Ruleset
+    Ruleset -> Ruleset ++--: Give Cards To Player
+    deactivate Ruleset
+    TableWorker --> Hub ++: Return Player Cards
+    Hub --> application --: Return Player Cards
+    TableWorker -> TableWorker ++--: Set Current Player
+    loop 1-5 times / Turn Logic
+        TableWorker -> PlayerActionEvaluator ++: Get Valid Actions
+        PlayerActionEvaluator -> PlayerActionEvaluator ++--: Calculate Actions
+        PlayerActionEvaluator --> TableWorker --: Calculated Actions
+        TableWorker --> Hub --++: Return Valid Actions
+        Hub --> application --: Return Valid Actions
+
+        alt Player Call
+            User -> application ++: Call
+            application -> Hub --++: Player Made Move
+            Hub -> TableWorker --++: Player Action Triggered
+            TableWorker -> PotManager ++: Increase Pot
+            PotManager -> PotManager ++--: Call Pot
+            PotManager --> TableWorker --: Call Amount
+            TableWorker --> Hub --++: Return Player Call Amount
+            Hub --> application --: Broadcast Player Call Amount
+
+        end
+        alt Player Raise
+            User -> application ++: Raise
+            application -> Hub --++: Player Made Move
+            Hub -> TableWorker --++: Player Action Triggered
+            TableWorker -> PotManager ++: Increase Pot
+            PotManager -> PotManager ++--: Raise Pot
+            PotManager --> TableWorker --: Raise Amount
+            TableWorker --> Hub --++: Return Player Raise Amount
+            Hub --> application --: Broadcast Player Raise Amount
+
+        end
+        alt Player Check
+            User -> application ++: Check
+            application -> Hub --++: Player Made Move
+            Hub -> TableWorker ++: Player Action Triggered
+            TableWorker --> Hub --: Return Player Check
+            Hub --> application --: Broadcast Player Check
+        end
+        alt Player Fold
+            User -> application ++: Fold
+            application -> Hub --++: Player Made Move
+            Hub -> TableWorker --++: Player Action Triggered
+            TableWorker -> TableWorker ++--: Deactivate Player
+            TableWorker --> Hub --++: Return Player Fold
+            Hub --> application --: Broadcast Player Fold
+        end
+        TableWorker -> TableWorker ++--: Set Next Player
+        alt GameCanEnd
+            TableWorker -> Ruleset ++: Determine Winner(s)
+        activate TableWorker
+            Ruleset -> HandEvaluator ++: Find Winner(s)
+            HandEvaluator -> HandEvaluator ++--: Calculate Winner(s)
+            HandEvaluator --> Ruleset --: Return Winner(s)
+            Ruleset --> TableWorker --++: Return Winner(s)
+            TableWorker -> PotManager : Payout Winner(s)
+            activate PotManager
+            PotManager -> PotManager ++--: Increase Player\nCash
+            deactivate PotManager
+            TableWorker --> Hub --++: Broadcast Winner(s)
+            Hub --> application --: Broadcast Winner(s)
+            application -> application ++--: Reset\nUI
+
+            TableWorker -> DeckFactory ++: Create New Deck
+            DeckFactory -> DeckFactory ++--: Create New Deck
+            DeckFactory --> TableWorker --: ReturnDeck
+            TableWorker -> PotManager : Reset\nPot
+            activate PotManager
+            PotManager -> PotManager ++--: Reset\nPot
+            deactivate PotManager
+            TableWorker -> TableWorker ++--: Reset\nPlayers
+        deactivate TableWorker
+        end
+    end
+end
+@enduml

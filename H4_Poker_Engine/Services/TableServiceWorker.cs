@@ -350,7 +350,6 @@ namespace H4_Poker_Engine.Services
                 if (indexOfPrevious + 1 == _endingPlayerIndex)
                 {
                     _hasRaised = false;
-                    //Something fucky about this
                     EndRound();
                 }
                 else if (indexOfPrevious + 1 == _players.Count)
