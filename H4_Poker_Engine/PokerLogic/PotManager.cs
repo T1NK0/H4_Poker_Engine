@@ -49,6 +49,11 @@ namespace H4_Poker_Engine.PokerLogic
             return callAmount;
         }
 
+        /// <summary>
+        /// Takes <paramref name="amountToRaise"/> from the <paramref name="playerToTakeFrom"/>
+        /// </summary>
+        /// <param name="amountToRaise"></param>
+        /// <param name="playerToTakeFrom"></param>
         public void RaisePot(int amountToRaise, Player playerToTakeFrom)
         {
             playerToTakeFrom.Money -= amountToRaise;

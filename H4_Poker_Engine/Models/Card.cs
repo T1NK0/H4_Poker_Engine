@@ -20,6 +20,7 @@ namespace H4_Poker_Engine.Models
         KING
     };
 
+    //Makes it so when you convert to json, it converts it into the name of the enum and not the int value
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum Suit
     {
@@ -41,21 +42,4 @@ namespace H4_Poker_Engine.Models
             Suit = suit;
         }
     }
-
-    //public class CardModel
-    //{
-    //    public string Suit { get; set; }
-    //    public string Value { get; set; }
-
-    //    //public CardModel(string suit, string value)
-    //    //{
-    //    //    Suit = suit;
-    //    //    Value = value;
-    //    //}
-    //    public CardModel(Card card)
-    //    {
-    //        Suit = card.Suit.ToString();
-    //        Value = card.Rank.ToString();
-    //    }
-    //}
 }

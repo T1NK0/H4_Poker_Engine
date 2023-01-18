@@ -26,7 +26,6 @@ namespace H4_Poker_Engine.Services
         public TableServiceWorker(BasePokerHub hub,
             BaseRuleSet ruleSet, IDeckFactory deckFactory)
         {
-            //_hub = hubContext;
             _hub = hub;
             _rules = ruleSet;
             _deckFactory = deckFactory;
@@ -62,6 +61,13 @@ namespace H4_Poker_Engine.Services
             _hub.PlayerMadeActionEvent += PlayerMadeActionAsync;
         }
 
+        /// <summary>
+        /// Method for whenever a player has made a choice of an action and now wants to do it. 
+        /// </summary>
+        /// <param name="user">The user who made an action</param>
+        /// <param name="action">The name of which poker action was requested</param>
+        /// <param name="raiseAmount">Only relevant if the player raised. an adjustable amount the player can raise.</param>
+        /// <param name="clientId">The id of the client connection</param>
         private async void PlayerMadeActionAsync(string user, string action, int raiseAmount, string clientId)
         {
             Console.WriteLine("------- Enters: Player Made Action -------");
@@ -111,18 +117,30 @@ namespace H4_Poker_Engine.Services
                 EndRound();
         }
 
+        /// <summary>
+        /// Sends to all connected clients what the totalPotAmount is currently
+        /// </summary>
         private async void UpdatePotAsync()
         {
             Console.WriteLine("------- Enters: Update Pot -------");
             await _hub.Clients.All.SendAsync("UpdatePot", _potManager.TotalPotAmount);
         }
 
+        /// <summary>
+        /// Sends to a designated player what his current money total is at.
+        /// </summary>
+        /// <param name="player">The player we want to notify of his total</param>
         private async void UpdatePlayerAmountAsync(Player player)
         {
             Console.WriteLine("------- Enters: Update Player Amount -------");
             await _hub.Clients.Client(player.ClientId).SendAsync("UpdateMoney", player.Money);
         }
 
+        /// <summary>
+        /// Creates a new player that will be added to the current lobby
+        /// </summary>
+        /// <param name="user">the username of the new player</param>
+        /// <param name="clientId">The connection's client id</param>
         private async void AddNewPlayerToGameAsync(string user, string clientId)
         {
             Console.WriteLine("------- Enters: Add New Player To Game -------");
@@ -141,6 +159,11 @@ namespace H4_Poker_Engine.Services
             await _hub.Clients.All.SendAsync("SendMessage", newPlayer.Username);
         }
 
+        /// <summary>
+        /// Removes a player from the current lobby of players
+        /// </summary>
+        /// <param name="user">the name of the player to remove</param>
+        /// <param name="clientId">The connection id of the player to remove</param>
         private async void RemovePlayerFromGameAsync(string user, string clientId)
         {
             Console.WriteLine("------- Enters: Remove player from game -------");
@@ -152,6 +175,12 @@ namespace H4_Poker_Engine.Services
                 await _hub.Clients.All.SendAsync("SendMessage", $"{playerToRemove.Username} has left");
             }
         }
+
+        /// <summary>
+        /// Change the state of a player, so that he is ready to play. Checks if a game can begin, if enough players are ready
+        /// </summary>
+        /// <param name="user">The username of the player who is ready</param>
+        /// <param name="clientId">The connection id of the incoming connection</param>
         private async void PlayerIsReadyToPlayAsync(string user, string clientId)
         {
             Console.WriteLine("------- Enters: Player is ready to play -------");
@@ -165,6 +194,9 @@ namespace H4_Poker_Engine.Services
             CheckIfGameCanBegin();
         }
 
+        /// <summary>
+        /// Starts a game, if able
+        /// </summary>
         private void CheckIfGameCanBegin()
         {
             Console.WriteLine("------- Enters: Check If Game Can Begin -------");
@@ -185,6 +217,9 @@ namespace H4_Poker_Engine.Services
             }
         }
 
+        /// <summary>
+        /// Resets all meta data for when a new game is ready to start
+        /// </summary>
         private void ResetGame()
         {
             roundCounter = 0;
@@ -200,6 +235,9 @@ namespace H4_Poker_Engine.Services
             _communityCards.Clear();
         }
 
+        /// <summary>
+        /// Method that calls the different managers, to setup the game, then notifying the first player, it is their turn
+        /// </summary>
         private async void BeginGameAsync()
         {
             Console.WriteLine("------- Enters: Begin Game -------");
@@ -234,6 +272,9 @@ namespace H4_Poker_Engine.Services
             //Do showdown
         }
 
+        /// <summary>
+        /// Gives the <see cref="Role.BIG_BLIND"/> and <seealso cref="Role.SMALL_BLIND"/> roles to random players
+        /// </summary>
         private void SetBlinds()
         {
             Console.WriteLine("------- Enters: Set Blinds -------");
@@ -311,6 +352,10 @@ namespace H4_Poker_Engine.Services
 
         }
 
+        /// <summary>
+        /// Notifies a player about his valid actions
+        /// </summary>
+        /// <param name="currentPlayer"></param>
         private async void BettingRoundAsync(Player currentPlayer)
         {
             Console.WriteLine("------- Enters: Betting Round -------");
@@ -321,12 +366,16 @@ namespace H4_Poker_Engine.Services
         }
 
 
-
+        /// <summary>
+        /// Given the current context of the game, will set the next legible player
+        /// </summary>
+        /// <param name="previousPlayer">Player who just finished his turn</param>
         private void SetNextPlayer(Player previousPlayer)
         {
             int indexOfPrevious = _players.IndexOf(previousPlayer);
             if (!_hasRaised)
             {
+                //This if is if nobody has raised, where their position in the list is > 0
                 //normal loop with no raises
                 if (indexOfPrevious + 1 < _players.Count)
                 {
@@ -346,6 +395,7 @@ namespace H4_Poker_Engine.Services
             }
             else
             {
+                //These checks are for covering edge cases after a player has raised
                 if (indexOfPrevious + 1 == _endingPlayerIndex)
                 {
                     _hasRaised = false;
@@ -380,6 +430,9 @@ namespace H4_Poker_Engine.Services
             }
         }
 
+        /// <summary>
+        /// Method for ending a round and the game if able
+        /// </summary>
         private async void EndRound()
         {
 
@@ -424,6 +477,9 @@ namespace H4_Poker_Engine.Services
             }
         }
 
+        /// <summary>
+        /// Sets the turn order of the players, based on the players carrying the blinds
+        /// </summary>
         private void SetTurnOrder()
         {
             Console.WriteLine("------- Enters: Set Turn Order -------");

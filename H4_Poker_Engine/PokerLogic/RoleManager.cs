@@ -6,6 +6,13 @@ namespace H4_Poker_Engine.PokerLogic
 {
     public class RoleManager
     {
+        /// <summary>
+        /// Moves the big and small blind roles in a list of players
+        /// </summary>
+        /// <param name="players">Players to iterate through</param>
+        /// <param name="smallBlind">The amount needed to receive <see cref="Role.SMALL_BLIND"/></param>
+        /// <param name="bigBlind"> The amount needed to receive <see cref="Role.BIG_BLIND"/></param>
+        /// <returns></returns>
         public bool MoveRoles(List<Player> players, int smallBlind, int bigBlind)
         {
             List<Player> activePlayers = GetActivePlayers(players);
@@ -24,11 +31,24 @@ namespace H4_Poker_Engine.PokerLogic
             return false;
         }
 
+        /// <summary>
+        /// Gets all players that are currently active in the game
+        /// </summary>
+        /// <param name="players">The list of players to check through</param>
+        /// <returns>Returns a list of all active players</returns>
         private List<Player> GetActivePlayers(List<Player> players)
         {
             return players.Where(p => p.Active).ToList();
         }
 
+
+        /// <summary>
+        /// Checks in a list of players if there is a suitable player for a specified role
+        /// </summary>
+        /// <param name="players">The list of players to check</param>
+        /// <param name="roleToCheck">The role to check on</param>
+        /// <param name="amountToPay">the amount the player needs to pay to receive the role</param>
+        /// <returns></returns>
         private bool IsSuitableRoleHolder(List<Player> players, Role roleToCheck, int amountToPay)
         {
             if (players.Any(p => p.Money >= amountToPay && p.Role != roleToCheck))

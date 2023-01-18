@@ -16,9 +16,13 @@ namespace H4_Poker_Engine.PokerLogic
         }
         #endregion
 
-        // TODO: talk about this!
-        //public abstract void AssignRoles(List<Player> players);
         
+        /// <summary>
+        /// Deal a specified amount of cards from a deck, to a list of players
+        /// </summary>
+        /// <param name="playersToDeal">Players to deal to</param>
+        /// <param name="deck">The deck to deal from</param>
+        /// <param name="amountToDeal">The amount each player will receive</param>
         public virtual void DealCards(List<Player> playersToDeal, List<Card> deck, int amountToDeal)
         {
             Console.WriteLine("------- Enters: Deal User Cards -------");
@@ -32,7 +36,11 @@ namespace H4_Poker_Engine.PokerLogic
             }
         }
 
-        //override this and also take note of community cards, if playing texas hold em
+        /// <summary>
+        /// Method for determining a winner or winners
+        /// </summary>
+        /// <param name="players">The list of players to find a winner(s) from</param>
+        /// <returns>The player(s) who won</returns>
         public virtual List<Player> DetermineWinner(List<Player> players)
         {
 

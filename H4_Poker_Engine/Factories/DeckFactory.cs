@@ -22,6 +22,10 @@ namespace H4_Poker_Engine.Factories
             return cards;
         }
 
+        /// <summary>
+        /// Shuffles a deck of cards using RandomNumberGeneration
+        /// </summary>
+        /// <param name="deck">The deck of cards to shuffle</param>
         private void ShuffleDeck(List<Card> deck)
         {
             var rng = RandomNumberGenerator.Create();

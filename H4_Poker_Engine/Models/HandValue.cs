@@ -14,6 +14,9 @@
         ROYALFLUSH
     };
 
+    /// <summary>
+    /// An object that holds the most relevant information about a players hand
+    /// </summary>
     public class HandValue
     {
         private HandRank handRank;

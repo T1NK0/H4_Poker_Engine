@@ -5,6 +5,11 @@ namespace H4_Poker_Engine.PokerLogic
 {
     public class HandEvaluator : IHandEvaluator
     {
+        /// <summary>
+        /// Evaluates a list of cards and finds the best combination available
+        /// </summary>
+        /// <param name="hand">The hand to look into</param>
+        /// <returns>the best combination possible from the <paramref name="hand"/></returns>
         public virtual HandValue GetHandValue(List<Card> hand)
         {
             List<Card> cards = hand.OrderByDescending(card => card.Rank)
@@ -69,6 +74,11 @@ namespace H4_Poker_Engine.PokerLogic
             return new HandValue(cards[0], cards[0], HandRank.NONE);
         }
 
+        /// <summary>
+        /// Checks if a list of cards contain a Royal flush
+        /// </summary>
+        /// <param name="cards">The cards to look through</param>
+        /// <returns>Returns a handvalue containing a <see cref="HandRank.ROYALFLUSH"/>, otherwise returns null</returns>
         private HandValue HasRoyalFlush(List<Card> cards)
         {
             if (HasStraightFlush(cards) != null)
@@ -88,6 +98,11 @@ namespace H4_Poker_Engine.PokerLogic
             return null;
         }
 
+        /// <summary>
+        /// Checks if a list of cards contain a Straight flush
+        /// </summary>
+        /// <param name="cards">The cards to look through</param>
+        /// <returns>Returns a handvalue containing a <see cref="HandRank.STRAIGHTFLUSH"/>, otherwise returns null</returns>
         private HandValue HasStraightFlush(List<Card> cards)
         {
             //no reason to check the last 4 cards, as a straight flush is never less than 5
@@ -127,6 +142,12 @@ namespace H4_Poker_Engine.PokerLogic
             }
             return null;
         }
+
+        /// <summary>
+        /// Checks if a list of cards contain a Four of a kind
+        /// </summary>
+        /// <param name="cards">The cards to look through</param>
+        /// <returns>Returns a handvalue containing a <see cref="HandRank.FOURKIND"/>, otherwise returns null</returns>
         private HandValue HasFourOfAKind(List<Card> cards)
         {
             //Uses GroupBy to group by rank, then checks if any group has count == 4
@@ -139,6 +160,12 @@ namespace H4_Poker_Engine.PokerLogic
             }
             return null;
         }
+
+        /// <summary>
+        /// Checks if a list of cards contain a Full House
+        /// </summary>
+        /// <param name="cards">The cards to look through</param>
+        /// <returns>Returns a handvalue containing a <see cref="HandRank.FULLHOUSE"/>, otherwise returns null</returns>
         private HandValue HasFullHouse(List<Card> cards)
         {
             //Uses GroupBy to group by rank, then checks if a group has 3 and a group has 2 elements
@@ -159,6 +186,11 @@ namespace H4_Poker_Engine.PokerLogic
             return null;
         }
 
+        /// <summary>
+        /// Checks if a list of cards contain a Flush
+        /// </summary>
+        /// <param name="cards">The cards to look through</param>
+        /// <returns>Returns a handvalue containing a <see cref="HandRank.FLUSH"/>, otherwise returns null</returns>
         private HandValue HasFlush(List<Card> cards)
         {
             foreach (Suit suit in Enum.GetValues(typeof(Suit)))
@@ -175,6 +207,11 @@ namespace H4_Poker_Engine.PokerLogic
             return null;
         }
 
+        /// <summary>
+        /// Checks if a list of cards contain a Straight
+        /// </summary>
+        /// <param name="cards">The cards to look through</param>
+        /// <returns>Returns a handvalue containing a <see cref="HandRank.STRAIGHT"/>, otherwise returns null</returns>
         private HandValue HasStraight(List<Card> cards)
         {
             //no reason to check the last 4 cards, as a straight is never less than 5
@@ -208,6 +245,11 @@ namespace H4_Poker_Engine.PokerLogic
             return null;
         }
 
+        /// <summary>
+        /// Checks if a list of cards contain a Three of a kind
+        /// </summary>
+        /// <param name="cards">The cards to look through</param>
+        /// <returns>Returns a handvalue containing a <see cref="HandRank.THREEKIND"/>, otherwise returns null</returns>
         private HandValue HasThreeOfAKind(List<Card> cards)
         {
             try
@@ -228,6 +270,12 @@ namespace H4_Poker_Engine.PokerLogic
                 return null;
             }
         }
+
+        /// <summary>
+        /// Checks if a list of cards contain two pairs
+        /// </summary>
+        /// <param name="cards">The cards to look through</param>
+        /// <returns>Returns a handvalue containing a <see cref="HandRank.TWOPAIR"/>, otherwise returns null</returns>
         private HandValue HasTwoPair(List<Card> cards)
         {
             try
@@ -249,6 +297,12 @@ namespace H4_Poker_Engine.PokerLogic
                 return null;
             }
         }
+
+        /// <summary>
+        /// Checks if a list of cards contain a pair
+        /// </summary>
+        /// <param name="cards">The cards to look through</param>
+        /// <returns>Returns a handvalue containing a <see cref="HandRank.PAIR"/>, otherwise returns null</returns>
         private HandValue HasPair(List<Card> cards)
         {
             try
